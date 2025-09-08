@@ -70,10 +70,23 @@
         </button>
         <a class="navbar-brand fw-bold d-lg-none" href="dashboard.html">DailyDo</a>
         <div class="ms-auto">
-          <span class="navbar-text d-none d-lg-inline">Welcome back!</span>
+          <span class="navbar-text d-none d-lg-inline" id="currentDate">Loading...</span>
         </div>
       </div>
     </nav>
+
+    <!-- TOAST NOTIFICATION -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055;">
+      <div id="successToast" class="toast align-items-center text-white border-0" role="alert" aria-live="assertive" aria-atomic="true" style="background: #896C6C;">
+        <div class="d-flex">
+          <div class="toast-body">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <span id="toastMessage">Task added successfully!</span>
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      </div>
+    </div>
 
     <!-- DASHBOARD CONTENT -->
   <section class="dashboard-section mt-4">
@@ -81,12 +94,11 @@
       <!-- Header Section -->
       <div class="row mb-4">
         <div class="col-12">
-          <h1 class="display-6 fw-bold mb-2">Welcome to your Dashboard</h1>
+          <h1 class="display-6 fw-bold mb-2">Welcome to your task space, <span id="userName">User</span>!</h1>
           <p class="text-muted fs-5">Stay organized and productive with DailyDo</p>
         </div>
       </div>
 
-      <!-- Bento Grid Layout -->
       <div class="row g-4">
         <!-- Quick Add Task - Large Card -->
          <div class="col-12 col-lg-8">
@@ -131,11 +143,11 @@
                <h3 class="fw-bold mb-2">Today's Progress</h3>
                <div class="row text-center">
                  <div class="col-6">
-                   <h2 class="fw-bold mb-0">3</h2>
+                   <h2 class="fw-bold mb-0" id="pendingCount">0</h2>
                    <small class="opacity-75">Pending</small>
                  </div>
                  <div class="col-6">
-                   <h2 class="fw-bold mb-0">2</h2>
+                   <h2 class="fw-bold mb-0" id="completedCount">0</h2>
                    <small class="opacity-75">Completed</small>
                  </div>
                </div>
@@ -154,32 +166,7 @@
              </div>
             <div class="card-body px-4 pb-4">
               <div id="todayTasks">
-                <div class="task-item mb-3 p-3 rounded-3" style="background: #fff5f5; border-left: 4px solid #dc3545;">
-                  <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                      <h6 class="mb-1 fw-semibold">Review project proposal</h6>
-                      <small class="text-muted"><i class="bi bi-clock me-1"></i>Due: 2:00 PM</small>
-                    </div>
-                    <span class="badge bg-danger rounded-pill"><i class="bi bi-bell-fill"></i></span>
-                  </div>
-                </div>
-                <div class="task-item mb-3 p-3 rounded-3" style="background: #f8f9fa;">
-                  <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                      <h6 class="mb-1 fw-semibold">Team meeting preparation</h6>
-                      <small class="text-muted"><i class="bi bi-clock me-1"></i>Due: 4:30 PM</small>
-                    </div>
-                  </div>
-                </div>
-                <div class="task-item mb-3 p-3 rounded-3" style="background: #fff5f5; border-left: 4px solid #dc3545;">
-                  <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                      <h6 class="mb-1 fw-semibold">Call dentist for appointment</h6>
-                      <small class="text-muted"><i class="bi bi-clock me-1"></i>Due: 6:00 PM</small>
-                    </div>
-                    <span class="badge bg-danger rounded-pill"><i class="bi bi-bell-fill"></i></span>
-                  </div>
-                </div>
+                <!-- Tasks will be displayed here -->
               </div>
             </div>
           </div>
@@ -196,40 +183,7 @@
              </div>
             <div class="card-body px-4 pb-4">
               <div id="upcomingTasks">
-                <div class="task-item mb-3 p-3 rounded-3" style="background: #f8f9fa;">
-                  <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                      <h6 class="mb-1 fw-semibold">Grocery shopping</h6>
-                      <small class="text-muted"><i class="bi bi-calendar me-1"></i>Tomorrow, 10:00 AM</small>
-                    </div>
-                  </div>
-                </div>
-                <div class="task-item mb-3 p-3 rounded-3" style="background: #fff5f5; border-left: 4px solid #dc3545;">
-                  <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                      <h6 class="mb-1 fw-semibold">Doctor appointment</h6>
-                      <small class="text-muted"><i class="bi bi-calendar me-1"></i>Dec 28, 3:00 PM</small>
-                    </div>
-                    <span class="badge bg-danger rounded-pill"><i class="bi bi-bell-fill"></i></span>
-                  </div>
-                </div>
-                <div class="task-item mb-3 p-3 rounded-3" style="background: #f8f9fa;">
-                  <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                      <h6 class="mb-1 fw-semibold">Submit monthly report</h6>
-                      <small class="text-muted"><i class="bi bi-calendar me-1"></i>Dec 30, 5:00 PM</small>
-                    </div>
-                  </div>
-                </div>
-                <div class="task-item mb-3 p-3 rounded-3" style="background: #fff5f5; border-left: 4px solid #dc3545;">
-                  <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                      <h6 class="mb-1 fw-semibold">New Year party planning</h6>
-                      <small class="text-muted"><i class="bi bi-calendar me-1"></i>Dec 31, 7:00 PM</small>
-                    </div>
-                    <span class="badge bg-danger rounded-pill"><i class="bi bi-bell-fill"></i></span>
-                  </div>
-                </div>
+                <!-- Tasks will be displayed here -->
               </div>
             </div>
           </div>
@@ -283,6 +237,68 @@
       }
     });
 
+    // Initialize dashboard data
+    function initializeDashboard() {
+      // Set current date
+      const now = new Date();
+      const options = { month: 'long', day: '2-digit', weekday: 'long' };
+      const formattedDate = now.toLocaleDateString('en-US', options);
+      const dateString = formattedDate.replace(/,/, ',').replace(/(\w+) (\d+), (\w+)/, '$1 $2, $3');
+      document.getElementById('currentDate').textContent = dateString;
+      
+      // Set user name (you can modify this to get from session/localStorage)
+      const userName = localStorage.getItem('userName') || 'User';
+      document.getElementById('userName').textContent = userName;
+      
+      // Update statistics
+      updateStatistics();
+    }
+    
+    // Function to update statistics
+    function updateStatistics() {
+      const todayTasks = document.getElementById('todayTasks').children.length;
+      const upcomingTasks = document.getElementById('upcomingTasks').children.length;
+      
+      // Count only actual task elements (not comments)
+      let todayCount = 0;
+      let upcomingCount = 0;
+      
+      for (let child of document.getElementById('todayTasks').children) {
+        if (child.nodeType === 1 && child.className.includes('task-item')) {
+          todayCount++;
+        }
+      }
+      
+      for (let child of document.getElementById('upcomingTasks').children) {
+        if (child.nodeType === 1 && child.className.includes('task-item')) {
+          upcomingCount++;
+        }
+      }
+      
+      document.getElementById('pendingCount').textContent = todayCount + upcomingCount;
+      document.getElementById('completedCount').textContent = '0'; // Will be updated when completion feature is added
+    }
+    
+    // Initialize dashboard on page load
+    document.addEventListener('DOMContentLoaded', initializeDashboard);
+    
+    // Function to show toast notification
+    function showToast(message) {
+      const toastElement = document.getElementById('successToast');
+      const toastMessage = document.getElementById('toastMessage');
+      
+      // Update message
+      toastMessage.textContent = message;
+      
+      // Create and show toast
+      const toast = new bootstrap.Toast(toastElement, {
+        autohide: true,
+        delay: 3000
+      });
+      
+      toast.show();
+    }
+
     // Quick add task functionality
     document.getElementById('quickAddForm').addEventListener('submit', function(e) {
       e.preventDefault();
@@ -294,7 +310,7 @@
       if (taskTitle.trim()) {
         // Create new task element
         const taskItem = document.createElement('div');
-        taskItem.className = 'd-flex align-items-center mb-3 p-3';
+        taskItem.className = 'task-item mb-3 p-3 rounded-3';
         taskItem.style.cssText = setReminder ? 
           'background: rgba(137, 108, 108, 0.1); border-radius: 10px; border-left: 4px solid #896C6C;' :
           'background: rgba(241, 240, 228, 0.3); border-radius: 10px;';
@@ -302,7 +318,6 @@
         const dueText = taskDue ? new Date(taskDue).toLocaleString() : 'No due date';
         
         taskItem.innerHTML = `
-          <input type="checkbox" class="form-check-input me-3">
           <div class="flex-grow-1">
             <h6 class="mb-1">${taskTitle}</h6>
             <small class="text-muted">Due: ${dueText}</small>
@@ -310,14 +325,40 @@
           ${setReminder ? '<span class="badge" style="background: #896C6C;">🔔</span>' : ''}
         `;
         
-        // Add to today's tasks
-        document.getElementById('todayTasks').appendChild(taskItem);
+        // Categorize task based on due date
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Reset time to start of day
+        
+        let targetContainer;
+        if (taskDue) {
+          const dueDate = new Date(taskDue);
+          dueDate.setHours(0, 0, 0, 0); // Reset time to start of day
+          
+          if (dueDate.getTime() === today.getTime()) {
+            // Task is due today
+            targetContainer = document.getElementById('todayTasks');
+          } else if (dueDate.getTime() > today.getTime()) {
+            // Task is due in the future
+            targetContainer = document.getElementById('upcomingTasks');
+          } else {
+            // Task is overdue, add to today's tasks
+            targetContainer = document.getElementById('todayTasks');
+          }
+        } else {
+          // No due date, add to upcoming tasks
+          targetContainer = document.getElementById('upcomingTasks');
+        }
+        
+        targetContainer.appendChild(taskItem);
+        
+        // Update statistics
+        updateStatistics();
         
         // Reset form
         this.reset();
         
         // Show success message
-        alert('Task added successfully!');
+        showToast('Task added successfully!');
       }
     });
   </script>
