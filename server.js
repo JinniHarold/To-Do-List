@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 8000;
 
 // Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json()); // <--- add this // ✅ allow JSON requests
+app.use(bodyParser.json()); 
 app.use(express.static(__dirname)); // serve static files
 
 // Sessions
