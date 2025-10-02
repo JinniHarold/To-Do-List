@@ -312,36 +312,36 @@ $user = getCurrentUser();
     ];
 
     // Initialize calendar on page load
-    document.addEventListener('DOMContentLoaded', function() {
-      loadTasks();
+    document.addEventListener('DOMContentLoaded', async function() {
+      await loadTasks();
       renderCalendar();
       
       // Event listeners
-      document.getElementById('prevMonth').addEventListener('click', () => {
+      document.getElementById('prevMonth').addEventListener('click', async () => {
         currentMonth--;
         if (currentMonth < 0) {
           currentMonth = 11;
           currentYear--;
         }
-        loadTasks();
+        await loadTasks();
         renderCalendar();
       });
 
-      document.getElementById('nextMonth').addEventListener('click', () => {
+      document.getElementById('nextMonth').addEventListener('click', async () => {
         currentMonth++;
         if (currentMonth > 11) {
           currentMonth = 0;
           currentYear++;
         }
-        loadTasks();
+        await loadTasks();
         renderCalendar();
       });
 
-      document.getElementById('todayBtn').addEventListener('click', () => {
+      document.getElementById('todayBtn').addEventListener('click', async () => {
         const today = new Date();
         currentMonth = today.getMonth();
         currentYear = today.getFullYear();
-        loadTasks();
+        await loadTasks();
         renderCalendar();
       });
     });
@@ -352,18 +352,13 @@ $user = getCurrentUser();
         const response = await fetch('api/tasks.php');
         const data = await response.json();
         
-        console.log('API Response:', data); // Debug log
-        
         if (data.success) {
           // Group tasks by date
           tasksData = {};
           data.tasks.forEach(task => {
-            console.log('Processing task:', task); // Debug log
             if (task.deadline) {
               const taskDate = new Date(task.deadline);
               const dateKey = `${taskDate.getFullYear()}-${String(taskDate.getMonth() + 1).padStart(2, '0')}-${String(taskDate.getDate()).padStart(2, '0')}`;
-              
-              console.log('Task date key:', dateKey, 'for task:', task.title); // Debug log
               
               if (!tasksData[dateKey]) {
                 tasksData[dateKey] = [];
@@ -371,7 +366,6 @@ $user = getCurrentUser();
               tasksData[dateKey].push(task);
             }
           });
-          console.log('Final tasksData:', tasksData); // Debug log
         }
       } catch (error) {
         console.error('Error loading tasks:', error);
@@ -448,12 +442,9 @@ $user = getCurrentUser();
 
           // Add tasks for this date
           const dateKey = `${cellDate.getFullYear()}-${String(cellDate.getMonth() + 1).padStart(2, '0')}-${String(cellDate.getDate()).padStart(2, '0')}`;
-          console.log('Checking date key:', dateKey, 'Tasks found:', tasksData[dateKey]); // Debug log
           if (tasksData[dateKey]) {
-            console.log('Found tasks for', dateKey, ':', tasksData[dateKey]); // Debug log
             const tasksToShow = tasksData[dateKey].slice(0, 3); // Show max 3 tasks
             tasksToShow.forEach(task => {
-              console.log('Creating task indicator for:', task.title); // Debug log
               const taskDiv = document.createElement('div');
               taskDiv.className = `task-indicator task-${task.priority}`;
               if (task.status === 'completed') {
