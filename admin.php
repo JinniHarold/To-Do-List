@@ -272,112 +272,65 @@ $user = getCurrentUser();
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Sample user data structure
+        // Real user data from database
         let users = [];
         let currentUser = null;
 
         // Initialize admin panel
         document.addEventListener('DOMContentLoaded', function() {
             loadUsers();
+            loadStats();
             setupSearch();
         });
 
-        // Load users from localStorage and generate sample data if needed
-        function loadUsers() {
-            // Try to load existing users from localStorage
-            const storedUsers = localStorage.getItem('allUsers');
-            if (storedUsers) {
-                users = JSON.parse(storedUsers);
-            } else {
-                // Generate sample users if none exist
-                generateSampleUsers();
-            }
-            
-            // Also check for registration data
-            const registrationData = localStorage.getItem('registrationData');
-            if (registrationData) {
-                const regData = JSON.parse(registrationData);
-                // Check if this user already exists
-                const existingUser = users.find(u => u.email === regData.email);
-                if (!existingUser) {
-                    const newUser = {
-                        id: Date.now(),
-                        firstName: regData.firstName,
-                        lastName: regData.lastName,
-                        email: regData.email,
-                        phone: generateRandomPhone(),
-                        address: generateRandomAddress(),
-                        registrationDate: regData.registrationDate || new Date().toLocaleDateString(),
-                        status: 'Active'
-                    };
-                    users.push(newUser);
-                    saveUsers();
+        // Load users from database via API
+        async function loadUsers() {
+            try {
+                const response = await fetch('api/admin.php?action=users');
+                const data = await response.json();
+                
+                if (data.success) {
+                    users = data.users;
+                    displayUsers();
+                } else {
+                    console.error('Failed to load users:', data.message);
+                    showError('Failed to load users: ' + data.message);
                 }
+            } catch (error) {
+                console.error('Error loading users:', error);
+                showError('Error loading users. Please try again.');
             }
-            
-            displayUsers();
-            updateStats();
         }
 
-        // Generate random phone number for demo
-        function generateRandomPhone() {
-            const areaCode = Math.floor(Math.random() * 900) + 100;
-            const exchange = Math.floor(Math.random() * 900) + 100;
-            const number = Math.floor(Math.random() * 9000) + 1000;
-            return `+1 (${areaCode}) ${exchange}-${number}`;
-        }
-
-        // Generate random address for demo
-        function generateRandomAddress() {
-            const streets = ['Main St', 'Oak Ave', 'Pine Rd', 'Elm St', 'Maple Dr', 'Cedar Ln', 'Park Ave', 'First St'];
-            const cities = ['New York, NY', 'Los Angeles, CA', 'Chicago, IL', 'Houston, TX', 'Phoenix, AZ', 'Philadelphia, PA'];
-            const streetNum = Math.floor(Math.random() * 9999) + 1;
-            const street = streets[Math.floor(Math.random() * streets.length)];
-            const city = cities[Math.floor(Math.random() * cities.length)];
-            const zip = Math.floor(Math.random() * 90000) + 10000;
-            return `${streetNum} ${street}, ${city} ${zip}`;
-        }
-
-        // Generate sample users for demonstration
-        function generateSampleUsers() {
-            users = [
-                {
-                    id: 1,
-                    firstName: 'John',
-                    lastName: 'Doe',
-                    email: 'john.doe@example.com',
-                    phone: '+1 (555) 123-4567',
-                    address: '123 Main St, New York, NY 10001',
-                    registrationDate: '2024-12-15',
-                    status: 'Active'
-                },
-                {
-                    id: 2,
-                    firstName: 'Jane',
-                    lastName: 'Smith',
-                    email: 'jane.smith@example.com',
-                    phone: '+1 (555) 987-6543',
-                    address: '456 Oak Ave, Los Angeles, CA 90210',
-                    registrationDate: '2024-12-20',
-                    status: 'Active'
-                },
-                {
-                    id: 3,
-                    firstName: 'Mike',
-                    lastName: 'Johnson',
-                    email: 'mike.johnson@example.com',
-                    phone: '+1 (555) 456-7890',
-                    address: '789 Pine Rd, Chicago, IL 60601',
-                    registrationDate: '2025-01-05',
-                    status: 'Active'
+        // Load statistics from database via API
+        async function loadStats() {
+            try {
+                const response = await fetch('api/admin.php?action=stats');
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateStats(data.stats);
+                } else {
+                    console.error('Failed to load stats:', data.message);
                 }
-            ];
-            saveUsers();
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
         }
 
-        // Save users to localStorage
-        function saveUsers() {
-            localStorage.setItem('allUsers', JSON.stringify(users));
+        // Show error message
+        function showError(message) {
+            const usersList = document.getElementById('usersList');
+            usersList.innerHTML = `
+                <div class="text-center py-5">
+                    <i class="bi bi-exclamation-triangle" style="font-size: 4rem; color: #dc3545;"></i>
+                    <h5 class="text-danger mt-3">Error</h5>
+                    <p class="text-muted">${message}</p>
+                    <button class="btn btn-primary" onclick="loadUsers()">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Retry
+                    </button>
+                </div>
+            `;
         }
 
         // Display users in the list
@@ -396,43 +349,63 @@ $user = getCurrentUser();
                 return;
             }
             
-            usersList.innerHTML = usersToShow.map(user => `
-                <div class="user-card" onclick="showUserDetails(${user.id})">
-                    <div class="row align-items-center">
-                        <div class="col-auto">
-                            <div class="user-avatar">
-                                ${user.firstName.charAt(0)}${user.lastName.charAt(0)}
+            usersList.innerHTML = usersToShow.map(user => {
+                // Get initials for avatar
+                const firstInitial = user.firstName ? user.firstName.charAt(0).toUpperCase() : '';
+                const lastInitial = user.lastName ? user.lastName.charAt(0).toUpperCase() : '';
+                const avatarText = firstInitial + lastInitial || user.username.charAt(0).toUpperCase();
+                
+                // Get display name
+                const displayName = user.firstName && user.lastName 
+                    ? `${user.firstName} ${user.lastName}`
+                    : user.username;
+                
+                return `
+                    <div class="user-card" onclick="showUserDetails(${user.id})">
+                        <div class="row align-items-center">
+                            <div class="col-auto">
+                                <div class="user-avatar">
+                                    ${avatarText}
+                                </div>
+                            </div>
+                            <div class="col">
+                                <h6 class="mb-1 fw-bold">${displayName}</h6>
+                                <p class="mb-1 text-muted">${user.email}</p>
+                                <small class="text-muted">
+                                    <i class="bi bi-calendar me-1"></i>Joined: ${user.registrationDate}
+                                </small>
+                            </div>
+                            <div class="col-auto">
+                                <span class="badge bg-success">${user.status}</span>
+                                <i class="bi bi-chevron-right ms-2 text-muted"></i>
                             </div>
                         </div>
-                        <div class="col">
-                            <h6 class="mb-1 fw-bold">${user.firstName} ${user.lastName}</h6>
-                            <p class="mb-1 text-muted">${user.email}</p>
-                            <small class="text-muted">
-                                <i class="bi bi-calendar me-1"></i>Joined: ${user.registrationDate}
-                            </small>
-                        </div>
-                        <div class="col-auto">
-                            <span class="badge bg-success">${user.status}</span>
-                            <i class="bi bi-chevron-right ms-2 text-muted"></i>
-                        </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         // Update statistics
-        function updateStats() {
-            document.getElementById('totalUsers').textContent = users.length;
-            document.getElementById('activeUsers').textContent = users.filter(u => u.status === 'Active').length;
-            
-            // Count new users this month
-            const currentMonth = new Date().getMonth();
-            const currentYear = new Date().getFullYear();
-            const newThisMonth = users.filter(user => {
-                const regDate = new Date(user.registrationDate);
-                return regDate.getMonth() === currentMonth && regDate.getFullYear() === currentYear;
-            }).length;
-            document.getElementById('newUsers').textContent = newThisMonth;
+        function updateStats(stats = null) {
+            if (stats) {
+                // Use stats from API
+                document.getElementById('totalUsers').textContent = stats.totalUsers;
+                document.getElementById('activeUsers').textContent = stats.activeUsers;
+                document.getElementById('newUsers').textContent = stats.newUsers;
+            } else {
+                // Fallback to calculating from current users array
+                document.getElementById('totalUsers').textContent = users.length;
+                document.getElementById('activeUsers').textContent = users.filter(u => u.status === 'Active').length;
+                
+                // Count new users this month
+                const currentMonth = new Date().getMonth();
+                const currentYear = new Date().getFullYear();
+                const newThisMonth = users.filter(user => {
+                    const regDate = new Date(user.registrationDate);
+                    return regDate.getMonth() === currentMonth && regDate.getFullYear() === currentYear;
+                }).length;
+                document.getElementById('newUsers').textContent = newThisMonth;
+            }
         }
 
         // Show user details in modal
@@ -440,16 +413,23 @@ $user = getCurrentUser();
             currentUser = users.find(u => u.id === userId);
             if (!currentUser) return;
             
+            // Get initials for avatar
+            const firstInitial = currentUser.firstName ? currentUser.firstName.charAt(0).toUpperCase() : '';
+            const lastInitial = currentUser.lastName ? currentUser.lastName.charAt(0).toUpperCase() : '';
+            const avatarText = firstInitial + lastInitial || currentUser.username.charAt(0).toUpperCase();
+            
+            // Get display name
+            const displayName = currentUser.firstName && currentUser.lastName 
+                ? `${currentUser.firstName} ${currentUser.lastName}`
+                : currentUser.username;
+            
             // Populate modal with user data
-            document.getElementById('modalUserAvatar').innerHTML = 
-                `${currentUser.firstName.charAt(0)}${currentUser.lastName.charAt(0)}`;
-            document.getElementById('modalUserName').textContent = 
-                `${currentUser.firstName} ${currentUser.lastName}`;
+            document.getElementById('modalUserAvatar').innerHTML = avatarText;
+            document.getElementById('modalUserName').textContent = displayName;
             document.getElementById('modalUserEmail').textContent = currentUser.email;
-            document.getElementById('modalFirstName').textContent = currentUser.firstName;
-            document.getElementById('modalLastName').textContent = currentUser.lastName;
+            document.getElementById('modalFirstName').textContent = currentUser.firstName || 'Not provided';
+            document.getElementById('modalLastName').textContent = currentUser.lastName || 'Not provided';
             document.getElementById('modalEmail').textContent = currentUser.email;
-
             document.getElementById('modalRegDate').textContent = currentUser.registrationDate;
             document.getElementById('modalStatus').innerHTML = 
                 `<span class="badge bg-success">${currentUser.status}</span>`;
@@ -480,6 +460,7 @@ $user = getCurrentUser();
         // Refresh user list
         function refreshUserList() {
             loadUsers();
+            loadStats();
             document.getElementById('searchUsers').value = '';
         }
 
