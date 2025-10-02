@@ -53,8 +53,8 @@ $user = getCurrentUser();
         </li>
         <li class="nav-item">
           <a class="nav-link" href="#">
-            <i class="bi bi-check-circle me-2"></i>
-            Completed
+            <i class="bi bi-calendar-check me-2"></i>
+            Calendar
           </a>
         </li>
         <li class="nav-item">
@@ -103,7 +103,7 @@ $user = getCurrentUser();
 
     <!-- DASHBOARD CONTENT -->
   <section class="dashboard-section mt-4">
-    <div class="container-fluid px-4 py-4" style="max-width: 1400px;">
+    <div class="container-fluid px-4 py-4">
       <!-- Header Section -->
       <div class="row mb-4">
         <div class="col-12">
@@ -293,8 +293,94 @@ $user = getCurrentUser();
       
       // Update statistics
       updateStatistics();
+      
+      // Load tasks from database
+      loadDashboardTasks();
     }
     
+    // Function to load tasks from database
+    async function loadDashboardTasks() {
+      try {
+        const response = await fetch('/api/tasks.php');
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.error || 'Failed to load tasks');
+        }
+
+        const tasks = data.tasks || [];
+        
+        // Clear existing tasks
+        document.getElementById('todayTasks').innerHTML = '';
+        document.getElementById('upcomingTasks').innerHTML = '';
+        
+        // Categorize and display tasks
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        tasks.forEach(task => {
+          const taskElement = createDashboardTaskElement(task);
+          
+          if (task.deadline) {
+            const dueDate = new Date(task.deadline);
+            dueDate.setHours(0, 0, 0, 0);
+            
+            if (dueDate.getTime() <= today.getTime()) {
+              // Task is due today or overdue
+              document.getElementById('todayTasks').appendChild(taskElement);
+            } else {
+              // Task is due in the future
+              document.getElementById('upcomingTasks').appendChild(taskElement);
+            }
+          } else {
+            // No due date, add to upcoming tasks
+            document.getElementById('upcomingTasks').appendChild(taskElement);
+          }
+        });
+        
+        // Update statistics
+        updateStatistics();
+        
+      } catch (error) {
+        console.error('Error loading tasks:', error);
+        document.getElementById('todayTasks').innerHTML = '<p class="text-muted">Error loading tasks</p>';
+        document.getElementById('upcomingTasks').innerHTML = '<p class="text-muted">Error loading tasks</p>';
+      }
+    }
+
+    // Function to create task element for dashboard
+    function createDashboardTaskElement(task) {
+      const taskItem = document.createElement('div');
+      taskItem.className = 'task-item mb-3 p-3 rounded-3';
+      taskItem.style.cssText = task.reminder ? 
+        'background: rgba(137, 108, 108, 0.1); border-radius: 10px; border-left: 4px solid #896C6C;' :
+        'background: rgba(241, 240, 228, 0.3); border-radius: 10px;';
+      
+      const dueText = task.deadline ? new Date(task.deadline).toLocaleString() : 'No due date';
+      const isCompleted = task.status === 'completed';
+      
+      taskItem.innerHTML = `
+        <div class="d-flex align-items-center">
+          <input type="checkbox" class="form-check-input me-3 task-checkbox" 
+                 style="transform: scale(1.2);" 
+                 ${isCompleted ? 'checked' : ''} 
+                 onchange="toggleTaskCompletion(this, ${task.id})">
+          <div class="flex-grow-1">
+            <h6 class="mb-1 task-title" style="${isCompleted ? 'text-decoration: line-through; opacity: 0.6;' : ''}">${task.title}</h6>
+            <small class="text-muted task-due" style="${isCompleted ? 'opacity: 0.6;' : ''}">Due: ${dueText}</small>
+          </div>
+          ${task.reminder ? '<span class="badge" style="background: #896C6C;"><i class="bi bi-bell-fill"></i></span>' : ''}
+        </div>
+      `;
+      
+      if (isCompleted) {
+        taskItem.style.background = 'rgba(40, 167, 69, 0.1)';
+        taskItem.style.borderLeft = '4px solid #28a745';
+      }
+      
+      return taskItem;
+    }
+
     // Function to update statistics
     function updateStatistics() {
       const allTasks = document.querySelectorAll('.task-item');
@@ -315,29 +401,77 @@ $user = getCurrentUser();
     }
     
     // Function to toggle task completion
-    function toggleTaskCompletion(checkbox) {
+    async function toggleTaskCompletion(checkbox, taskId) {
       const taskItem = checkbox.closest('.task-item');
       const taskTitle = taskItem.querySelector('.task-title');
       const taskDue = taskItem.querySelector('.task-due');
       
-      if (checkbox.checked) {
-        // Mark as completed
-        taskTitle.style.textDecoration = 'line-through';
-        taskTitle.style.opacity = '0.6';
-        taskDue.style.opacity = '0.6';
-        taskItem.style.background = 'rgba(40, 167, 69, 0.1)';
-        taskItem.style.borderLeft = '4px solid #28a745';
-      } else {
-        // Mark as pending
-        taskTitle.style.textDecoration = 'none';
-        taskTitle.style.opacity = '1';
-        taskDue.style.opacity = '1';
-        taskItem.style.background = 'rgba(241, 240, 228, 0.3)';
-        taskItem.style.borderLeft = 'none';
-      }
+      const newStatus = checkbox.checked ? 'completed' : 'pending';
       
-      // Update statistics
-      updateStatistics();
+      try {
+        // Get current task data from API first
+        const response = await fetch('/api/tasks.php');
+        const data = await response.json();
+        
+        if (!data.success) {
+          throw new Error('Failed to fetch task data');
+        }
+        
+        const task = data.tasks.find(t => t.id == taskId);
+        if (!task) {
+          throw new Error('Task not found');
+        }
+        
+        // Update task status
+        const updateResponse = await fetch('/api/tasks.php', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            id: taskId,
+            title: task.title,
+            description: task.description,
+            priority: task.priority,
+            deadline: task.deadline,
+            reminder: task.reminder,
+            reminder_time: task.reminder_time,
+            status: newStatus
+          })
+        });
+
+        const updateData = await updateResponse.json();
+
+        if (!updateData.success) {
+          throw new Error(updateData.error || 'Failed to update task');
+        }
+
+        // Update UI
+        if (checkbox.checked) {
+          // Mark as completed
+          taskTitle.style.textDecoration = 'line-through';
+          taskTitle.style.opacity = '0.6';
+          taskDue.style.opacity = '0.6';
+          taskItem.style.background = 'rgba(40, 167, 69, 0.1)';
+          taskItem.style.borderLeft = '4px solid #28a745';
+        } else {
+          // Mark as pending
+          taskTitle.style.textDecoration = 'none';
+          taskTitle.style.opacity = '1';
+          taskDue.style.opacity = '1';
+          taskItem.style.background = 'rgba(241, 240, 228, 0.3)';
+          taskItem.style.borderLeft = 'none';
+        }
+        
+        // Update statistics
+        updateStatistics();
+        
+      } catch (error) {
+        console.error('Error updating task:', error);
+        // Revert checkbox state
+        checkbox.checked = !checkbox.checked;
+        showToast('Error updating task: ' + error.message);
+      }
     }
     
     // Initialize dashboard on page load
@@ -367,7 +501,7 @@ $user = getCurrentUser();
     }
 
     // Quick add task functionality
-    document.getElementById('quickAddForm').addEventListener('submit', function(e) {
+    document.getElementById('quickAddForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       
       const taskTitle = document.getElementById('taskTitle').value;
@@ -375,60 +509,44 @@ $user = getCurrentUser();
       const setReminder = document.getElementById('setReminder').checked;
       
       if (taskTitle.trim()) {
-        // Create new task element
-        const taskItem = document.createElement('div');
-        taskItem.className = 'task-item mb-3 p-3 rounded-3';
-        taskItem.style.cssText = setReminder ? 
-          'background: rgba(137, 108, 108, 0.1); border-radius: 10px; border-left: 4px solid #896C6C;' :
-          'background: rgba(241, 240, 228, 0.3); border-radius: 10px;';
-        
-        const dueText = taskDue ? new Date(taskDue).toLocaleString() : 'No due date';
-        
-        taskItem.innerHTML = `
-          <div class="d-flex align-items-center">
-            <input type="checkbox" class="form-check-input me-3 task-checkbox" style="transform: scale(1.2);" onchange="toggleTaskCompletion(this)">
-            <div class="flex-grow-1">
-              <h6 class="mb-1 task-title">${taskTitle}</h6>
-              <small class="text-muted task-due">Due: ${dueText}</small>
-            </div>
-            ${setReminder ? '<span class="badge" style="background: #896C6C;">🔔</span>' : ''}
-          </div>
-        `;
-        
-        // Categorize task based on due date
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Reset time to start of day
-        
-        let targetContainer;
-        if (taskDue) {
-          const dueDate = new Date(taskDue);
-          dueDate.setHours(0, 0, 0, 0); // Reset time to start of day
-          
-          if (dueDate.getTime() === today.getTime()) {
-            // Task is due today
-            targetContainer = document.getElementById('todayTasks');
-          } else if (dueDate.getTime() > today.getTime()) {
-            // Task is due in the future
-            targetContainer = document.getElementById('upcomingTasks');
-          } else {
-            // Task is overdue, add to today's tasks
-            targetContainer = document.getElementById('todayTasks');
+        try {
+          const taskData = {
+            title: taskTitle,
+            description: '',
+            deadline: taskDue || null,
+            priority: 'medium',
+            reminder: setReminder,
+            reminder_time: setReminder ? 15 : 15,
+            status: 'pending'
+          };
+
+          const response = await fetch('/api/tasks.php', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(taskData)
+          });
+
+          const data = await response.json();
+
+          if (!data.success) {
+            throw new Error(data.error || 'Failed to create task');
           }
-        } else {
-          // No due date, add to upcoming tasks
-          targetContainer = document.getElementById('upcomingTasks');
+
+          // Reset form
+          this.reset();
+          
+          // Show success message
+          showToast('Task added successfully!');
+          
+          // Reload tasks to show the new task
+          await loadDashboardTasks();
+          
+        } catch (error) {
+          console.error('Error creating task:', error);
+          showToast('Error creating task: ' + error.message);
         }
-        
-        targetContainer.appendChild(taskItem);
-        
-        // Update statistics
-        updateStatistics();
-        
-        // Reset form
-        this.reset();
-        
-        // Show success message
-        showToast('Task added successfully!');
       }
     });
   </script>

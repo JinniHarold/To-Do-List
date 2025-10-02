@@ -129,8 +129,8 @@ $user = getCurrentUser();
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="#">
-                        <i class="bi bi-check-circle me-2"></i>
-                        Completed
+                        <i class="bi bi-calendar-check me-2"></i>
+                        Calendar
                     </a>
                 </li>
                 <li class="nav-item">
@@ -400,69 +400,87 @@ $user = getCurrentUser();
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Profile data management
-        let profileData = {
-            firstName: 'Samantha',
-            lastName: 'Rubica',
-            email: 'sama@mail.com',
-            profilePicture: null,
-            completedTasks: 12,
-            currentStreak: 5,
-            totalTasks: 18,
-            memberSince: 'January 2025',
-            bio: '',
-            interests: []
-        };
+        let profileData = {};
 
-        // Load profile data from localStorage
-        function loadProfileData() {
-            // First check for registration data
-            const registrationData = localStorage.getItem('registrationData');
-            if (registrationData) {
-                const regData = JSON.parse(registrationData);
-                profileData.firstName = regData.firstName || profileData.firstName;
-                profileData.lastName = regData.lastName || profileData.lastName;
-                profileData.email = regData.email || profileData.email;
-                profileData.memberSince = regData.registrationDate || profileData.memberSince;
+        // Load profile data from API
+        async function loadProfileData() {
+            try {
+                const response = await fetch('/api/profile.php');
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to load profile data');
+                }
+                
+                profileData = data.user;
+                updateProfileDisplay();
+            } catch (error) {
+                console.error('Error loading profile data:', error);
+                showAlert('Failed to load profile data: ' + error.message, 'error');
             }
-            
-            // Then check for saved profile data
-            const saved = localStorage.getItem('profileData');
-            if (saved) {
-                profileData = { ...profileData, ...JSON.parse(saved) };
-            }
-            updateProfileDisplay();
         }
 
-        // Save profile data to localStorage
-        function saveProfileData() {
-            localStorage.setItem('profileData', JSON.stringify(profileData));
+        // Save profile data to API
+        async function saveProfileData(updateData) {
+            try {
+                const response = await fetch('/api/profile.php', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updateData)
+                });
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to save profile data');
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('Error saving profile data:', error);
+                throw error;
+            }
         }
 
         // Update profile display
         function updateProfileDisplay() {
-            document.getElementById('displayName').textContent = `${profileData.firstName} ${profileData.lastName}`;
-            document.getElementById('displayEmail').textContent = profileData.email;
-            document.getElementById('memberSince').textContent = `Member since ${profileData.memberSince}`;
+            // Update header
+            document.getElementById('displayName').textContent = `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim();
+            document.getElementById('displayEmail').textContent = profileData.email || '';
+            
+            // Format member since date
+            const memberSince = profileData.created_at ? new Date(profileData.created_at).toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long' 
+            }) : 'Unknown';
+            document.getElementById('memberSince').textContent = `Member since ${memberSince}`;
             
             // Update display mode fields
-            document.getElementById('displayFirstName').textContent = profileData.firstName;
-            document.getElementById('displayLastName').textContent = profileData.lastName;
-            document.getElementById('displayEmailAddress').textContent = profileData.email;
+            document.getElementById('displayFirstName').textContent = profileData.first_name || 'Not set';
+            document.getElementById('displayLastName').textContent = profileData.last_name || 'Not set';
+            document.getElementById('displayEmailAddress').textContent = profileData.email || '';
             
             // Update form fields
-            document.getElementById('firstName').value = profileData.firstName;
-            document.getElementById('lastName').value = profileData.lastName;
-            document.getElementById('email').value = profileData.email;
+            document.getElementById('firstName').value = profileData.first_name || '';
+            document.getElementById('lastName').value = profileData.last_name || '';
+            document.getElementById('email').value = profileData.email || '';
             
             // Update bio and interests
             document.getElementById('displayBio').textContent = profileData.bio || 'Tell us about yourself...';
             document.getElementById('bio').value = profileData.bio || '';
-            document.getElementById('interests').value = profileData.interests ? profileData.interests.join(', ') : '';
+            
+            // Handle interests (stored as comma-separated string in database)
+            const interests = (profileData.interests && typeof profileData.interests === 'string') 
+                ? profileData.interests.split(',').map(i => i.trim()).filter(i => i) 
+                : [];
+            document.getElementById('interests').value = interests.join(', ');
             
             // Update interests display
             const interestsContainer = document.getElementById('displayInterests');
-            if (profileData.interests && profileData.interests.length > 0) {
-                interestsContainer.innerHTML = profileData.interests.map(interest => 
+            if (interests.length > 0) {
+                interestsContainer.innerHTML = interests.map(interest => 
                     `<span class="badge bg-primary">${interest.trim()}</span>`
                 ).join(' ');
             } else {
@@ -470,11 +488,11 @@ $user = getCurrentUser();
             }
             
             // Update stats
-            document.getElementById('currentStreak').textContent = profileData.currentStreak;
+            document.getElementById('currentStreak').textContent = profileData.current_streak || 0;
             
             // Update profile picture
-            if (profileData.profilePicture) {
-                document.getElementById('profilePicture').src = profileData.profilePicture;
+            if (profileData.profile_picture) {
+                document.getElementById('profilePicture').src = profileData.profile_picture;
                 document.getElementById('profilePicture').style.display = 'block';
                 document.getElementById('profilePlaceholder').style.display = 'none';
             }
@@ -543,7 +561,7 @@ $user = getCurrentUser();
         });
 
         // Handle profile form submission
-        document.getElementById('profileForm').addEventListener('submit', function(e) {
+        document.getElementById('profileForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const firstName = document.getElementById('firstName').value.trim();
@@ -551,46 +569,68 @@ $user = getCurrentUser();
             const email = document.getElementById('email').value.trim();
             
             if (firstName && lastName && email) {
-                profileData.firstName = firstName;
-                profileData.lastName = lastName;
-                profileData.email = email;
-                
-                saveProfileData();
-                updateProfileDisplay();
-                showAlert('Profile updated successfully!');
-                
-                // Switch back to display mode
-                document.getElementById('profileEdit').style.display = 'none';
-                document.getElementById('profileDisplay').style.display = 'block';
-                document.getElementById('editProfileBtn').style.display = 'inline-block';
+                try {
+                    const updateData = {
+                        first_name: firstName,
+                        last_name: lastName,
+                        email: email
+                    };
+                    
+                    await saveProfileData(updateData);
+                    
+                    // Update local data
+                    profileData.first_name = firstName;
+                    profileData.last_name = lastName;
+                    profileData.email = email;
+                    
+                    updateProfileDisplay();
+                    showAlert('Profile updated successfully!');
+                    
+                    // Switch back to display mode
+                    document.getElementById('profileEdit').style.display = 'none';
+                    document.getElementById('profileDisplay').style.display = 'block';
+                    document.getElementById('editProfileBtn').style.display = 'inline-block';
+                } catch (error) {
+                    showAlert('Failed to update profile: ' + error.message, 'error');
+                }
             } else {
                 showAlert('Please fill in all required fields.', 'error');
             }
         });
         
         // Handle bio form submission
-        document.getElementById('bioForm').addEventListener('submit', function(e) {
+        document.getElementById('bioForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const bio = document.getElementById('bio').value.trim();
+            const bio = document.getElementById('bioText').value.trim();
             const interestsInput = document.getElementById('interests').value.trim();
-            const interests = interestsInput ? interestsInput.split(',').map(i => i.trim()).filter(i => i) : [];
             
-            profileData.bio = bio;
-            profileData.interests = interests;
-            
-            saveProfileData();
-            updateProfileDisplay();
-            showAlert('Bio and interests updated successfully!');
-            
-            // Switch back to display mode
-            document.getElementById('bioEdit').style.display = 'none';
-            document.getElementById('bioDisplay').style.display = 'block';
-            document.getElementById('editBioBtn').style.display = 'inline-block';
+            try {
+                const updateData = {
+                    bio: bio,
+                    interests: interestsInput
+                };
+                
+                await saveProfileData(updateData);
+                
+                // Update local data
+                profileData.bio = bio;
+                profileData.interests = interestsInput;
+                
+                updateProfileDisplay();
+                showAlert('Bio and interests updated successfully!');
+                
+                // Switch back to display mode
+                document.getElementById('bioEdit').style.display = 'none';
+                document.getElementById('bioDisplay').style.display = 'block';
+                document.getElementById('editBioBtn').style.display = 'inline-block';
+            } catch (error) {
+                showAlert('Failed to update bio: ' + error.message, 'error');
+            }
         });
 
         // Handle password form submission
-        document.getElementById('passwordForm').addEventListener('submit', function(e) {
+        document.getElementById('passwordForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const currentPassword = document.getElementById('currentPassword').value;
@@ -612,27 +652,58 @@ $user = getCurrentUser();
                 return;
             }
             
-            // In a real app, you'd verify the current password
-            showAlert('Password changed successfully!');
-            document.getElementById('passwordForm').reset();
-            
-            // Switch back to display mode
-            document.getElementById('passwordEdit').style.display = 'none';
-            document.getElementById('passwordDisplay').style.display = 'block';
-            document.getElementById('editPasswordBtn').style.display = 'inline-block';
+            try {
+                const response = await fetch('/api/profile.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        currentPassword: currentPassword,
+                        newPassword: newPassword
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to update password');
+                }
+                
+                showAlert('Password changed successfully!');
+                document.getElementById('passwordForm').reset();
+                
+                // Switch back to display mode
+                document.getElementById('passwordEdit').style.display = 'none';
+                document.getElementById('passwordDisplay').style.display = 'block';
+                document.getElementById('editPasswordBtn').style.display = 'inline-block';
+            } catch (error) {
+                showAlert('Failed to update password: ' + error.message, 'error');
+            }
         });
 
         // Handle profile picture upload
-        document.getElementById('profilePictureInput').addEventListener('change', function(e) {
+        document.getElementById('profilePictureInput').addEventListener('change', async function(e) {
             const file = e.target.files[0];
             if (file) {
                 if (file.type.startsWith('image/')) {
                     const reader = new FileReader();
-                    reader.onload = function(e) {
-                        profileData.profilePicture = e.target.result;
-                        saveProfileData();
-                        updateProfileDisplay();
-                        showAlert('Profile picture updated successfully!');
+                    reader.onload = async function(e) {
+                         try {
+                             const updateData = {
+                                 profile_picture: e.target.result
+                             };
+                             
+                             await saveProfileData(updateData);
+                             
+                             // Update local data
+                             profileData.profile_picture = e.target.result;
+                            
+                            updateProfileDisplay();
+                            showAlert('Profile picture updated successfully!');
+                        } catch (error) {
+                            showAlert('Failed to update profile picture: ' + error.message, 'error');
+                        }
                     };
                     reader.readAsDataURL(file);
                 } else {
