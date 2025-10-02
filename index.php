@@ -7,7 +7,7 @@ require_once 'includes/auth.php';
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title>To-Do List</title>
+        <title>dailydo - Home</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
         <link rel="stylesheet" href="assets/style.css">
@@ -19,7 +19,7 @@ require_once 'includes/auth.php';
         <!--NAVBAR-->
         <nav class="navbar">
             <div class="navbar-container">
-              <a href="index.php" class="navbar-logo">To-Do Lists</a>
+              <a href="index.php" class="navbar-logo">dailydo</a>
               <button class="navbar-toggle">
                 <span class="bar"></span>
                 <span class="bar"></span>
@@ -64,7 +64,7 @@ require_once 'includes/auth.php';
 
         <!-- FOOTER -->
         <footer class="footer">
-            <p>&copy; 2025 To-Do Lists. All rights reserved.</p>
+            <p>&copy; 2025 dailydo. All rights reserved.</p>
         </footer>
     </body>
 </html>

@@ -13,7 +13,7 @@ if (isLoggedIn()) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>To-Do List - Register</title>
+  <title>dailydo - Register</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
   <link rel="stylesheet" href="assets/style.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -25,7 +25,7 @@ if (isLoggedIn()) {
   <!-- NAVBAR -->
   <nav class="navbar">
     <div class="navbar-container">
-      <a href="#" class="navbar-logo">To-Do Lists</a>
+      <a href="<?php echo isLoggedIn() ? 'dashboard.php' : 'index.php'; ?>" class="navbar-logo">dailydo</a>
       <button class="navbar-toggle">
         <span class="bar"></span>
         <span class="bar"></span>
@@ -66,7 +66,7 @@ if (isLoggedIn()) {
 
   <!-- FOOTER -->
   <footer class="footer">
-    <p>&copy; 2025 To-Do Lists. All rights reserved.</p>
+    <p>&copy; 2025 dailydo. All rights reserved.</p>
   </footer>
 
   <script>
@@ -109,7 +109,7 @@ if (isLoggedIn()) {
             title: 'Registered!',
             text: data.message
           }).then(() => {
-            window.location.href = 'login.php';
+            window.location.href = 'dashboard.php';
           });
         } else {
           Swal.fire({ icon: 'error', title: 'Registration Failed', text: data.message });
