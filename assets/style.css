@@ -131,8 +131,133 @@ body{
     z-index: 1000;
 }
 
+/* Task List Styles */
+.task-section {
+  min-height: calc(100vh - 200px);
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.task-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.task-card:hover {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  transform: translateY(-2px);
+}
+
+.task-card.completed-task {
+  background-color: #f8f9fa;
+  border-color: #dee2e6;
+}
+
+.task-card .card-body {
+  padding: 1.25rem;
+}
+
+.task-card .btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+.task-card .badge {
+  font-size: 0.75rem;
+  padding: 0.25em 0.5em;
+}
+
+.task-checkbox {
+  transition: transform 0.2s ease;
+}
+
+.task-checkbox:hover {
+  transform: scale(1.1);
+}
+
+.task-checkbox i {
+  transition: color 0.2s ease;
+}
+
+.task-checkbox:hover i {
+  color: #198754 !important;
+}
+
+/* Priority colors */
+.badge.bg-danger {
+  background-color: #dc3545 !important;
+}
+
+.badge.bg-warning {
+  background-color: #ffc107 !important;
+  color: #000;
+}
+
+.badge.bg-success {
+  background-color: #198754 !important;
+}
+
+/* Modal customization */
+.modal-content {
+  border-radius: 8px;
+  border: none;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+  border-bottom: 1px solid #dee2e6;
+  border-radius: 8px 8px 0 0;
+}
+
+.modal-footer {
+  border-top: 1px solid #dee2e6;
+  border-radius: 0 0 8px 8px;
+}
+
+/* Form controls */
+.form-control:focus,
+.form-select:focus {
+  border-color: #896C6C;
+  box-shadow: 0 0 0 0.2rem rgba(137, 108, 108, 0.25);
+}
+
+/* Toast notification */
+.toast {
+  border-radius: 8px;
+}
+
+/* Search and filter section */
+.input-group-text {
+  background-color: #f8f9fa;
+  border-color: #ced4da;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .task-section {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  .task-card .d-flex.gap-2 {
+    flex-direction: column;
+    gap: 0.5rem !important;
+  }
+  
+  .task-card .btn-sm {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .modal-dialog {
+    margin: 1rem;
+  }
+}
+
 /*LOGIN & REGISTER STYLES*/
-.forgot-section, .register-section, .login-section {
+.register-section, .login-section {
     min-height: 100vh;
     display: flex;
     justify-content: center;
@@ -141,7 +266,7 @@ body{
     padding: 1rem;
 }
 
-.forgot-container, .register-container, .login-container {
+.register-container, .login-container {
     background: #fff;
     padding: clamp(1.5rem, 4vw, 2rem);
     border-radius: 12px;
@@ -152,22 +277,22 @@ body{
     margin: 0 auto;
 }
 
-.forgot-container h2, .register-container h2, .login-container h2 {
+.register-container h2, .login-container h2 {
     margin-bottom: 0.5rem;
     font-size: 1.8rem;
     color: #333;
 }
 
-.forgot-container p, .register-container p, .login-container p {
+.register-container p, .login-container p {
     color: #666;
     margin-bottom: 1.5rem;
 }
 
-.forgot-form .form-group, .register-form .form-group, .login-form .form-group {
+.register-form .form-group, .login-form .form-group {
     margin-bottom: 1rem;
 }
 
-.forgot-form input, .register-form input, .login-form input {
+.register-form input, .login-form input {
     width: 100%;
     padding: 0.8rem 1rem;
     border: 1px solid #ccc;
@@ -176,7 +301,7 @@ body{
     outline: none;
 }
 
-.forgot-btn, .register-btn, .login-btn {
+.register-btn, .login-btn {
     width: 100%;
     padding: 0.8rem;
     background: #F1F0E4;
@@ -188,7 +313,7 @@ body{
     transition: 0.2s;
 }
 
-.forgot-btn:hover, .register-btn:hover, .login-btn:hover {
+.register-btn:hover, .login-btn:hover {
     background: #896C6C;
     color: white;
 }
@@ -199,12 +324,12 @@ body{
     color: #666;
 }
 
-.forgot-pass, .register-link a{
+.register-link a{
     color: #896C6C;
     text-decoration: none;
 }
 
-.forgot-pass:hover, .register-link a:hover {
+.register-link a:hover {
     text-decoration: underline;
 }
 
@@ -222,7 +347,7 @@ body{
         margin-bottom: 2rem;
     }
     
-    .forgot-container, .register-container, .login-container {
+    .register-container, .login-container {
         max-width: 350px;
     }
 }
@@ -294,12 +419,12 @@ body{
         border-radius: 20px;
     }
     
-    .forgot-container, .register-container, .login-container {
+    .register-container, .login-container {
         max-width: 300px;
         padding: 1.5rem 1rem;
     }
     
-    .forgot-container h2, .register-container h2, .login-container h2 {
+    .register-container h2, .login-container h2 {
         font-size: 1.5rem;
     }
     
@@ -415,7 +540,7 @@ body{
 
 .logout-link:hover {
     background-color: rgba(220, 53, 69, 0.1);
-    color: #dc3545 !important;
+    color: #000000 !important;
 }
 
 .main-content {
