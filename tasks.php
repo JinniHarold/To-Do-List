@@ -103,41 +103,50 @@ $user = getCurrentUser();
     </div>
 
     <!-- TASK LIST SECTION -->
-    <section class="task-section py-4">
-      <div class="container-fluid">
-        <!-- Header -->
+    <section class="task-section mt-4">
+      <div class="container-fluid px-4 py-4">
+        <!-- Header Section -->
         <div class="row mb-4">
           <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-              <h1 class="fw-bold" style="color: #333;">Task List</h1>
-              <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTaskModal" style="background: #896C6C; border: none;">
-                <i class="bi bi-plus-circle me-2"></i>Add New Task
-              </button>
-            </div>
+            <h1 class="display-6 fw-bold mb-2"><i class="bi bi-list-task me-2" style="color: #896C6C;"></i>Task Management</h1>
+            <p class="text-muted fs-5 mb-4">Organize and track your tasks efficiently</p>
+            <div class="d-flex justify-content-end">
+               <button class="btn btn-lg fw-bold" data-bs-toggle="modal" data-bs-target="#addTaskModal" style="background: #896C6C; color: white; border: none; border-radius: 15px; padding: 12px 24px;">
+                 <i class="bi bi-plus-circle me-2"></i>Add New Task
+               </button>
+             </div>
           </div>
         </div>
 
-        <!-- Filter and Search -->
-        <div class="row mb-4">
-          <div class="col-12 col-md-6">
-            <div class="input-group">
-              <span class="input-group-text"><i class="bi bi-search"></i></span>
-              <input type="text" class="form-control" id="searchTasks" placeholder="Search tasks...">
+        <!-- Filter and Search Section -->
+        <div class="card mb-4 border-0 shadow-sm" style="background: #F1F0E4; border-radius: 20px;">
+          <div class="card-body p-4">
+            <div class="d-flex align-items-center mb-3">
+              <i class="bi bi-funnel fs-4 me-3" style="color: #896C6C;"></i>
+              <h5 class="mb-0 fw-bold" style="color: #333;">Filter & Search</h5>
             </div>
-          </div>
-          <div class="col-12 col-md-6">
-            <div class="d-flex gap-2">
-              <select class="form-select" id="filterPriority">
-                <option value="">All Priorities</option>
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
-              </select>
-              <select class="form-select" id="filterStatus">
-                <option value="">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="completed">Completed</option>
-              </select>
+            <div class="row g-3">
+              <div class="col-12 col-lg-6">
+                <div class="input-group">
+                  <span class="input-group-text" style="background: white; border: 2px solid #DDDAD0; border-right: none;"><i class="bi bi-search" style="color: #896C6C;"></i></span>
+                  <input type="text" class="form-control form-control-lg" id="searchTasks" placeholder="Search tasks..." style="border: 2px solid #DDDAD0; border-left: none; border-radius: 0 15px 15px 0;">
+                </div>
+              </div>
+              <div class="col-12 col-lg-3">
+                 <select class="form-select form-select-lg" id="filterPriority" style="border: 2px solid #DDDAD0; border-radius: 15px;">
+                   <option value="">All Priorities</option>
+                   <option value="high">High Priority</option>
+                   <option value="medium">Medium Priority</option>
+                   <option value="low">Low Priority</option>
+                 </select>
+               </div>
+               <div class="col-12 col-lg-3">
+                 <select class="form-select form-select-lg" id="filterStatus" style="border: 2px solid #DDDAD0; border-radius: 15px;">
+                   <option value="">All Status</option>
+                   <option value="pending">Pending</option>
+                   <option value="completed">Completed</option>
+                 </select>
+               </div>
             </div>
           </div>
         </div>
@@ -162,58 +171,71 @@ $user = getCurrentUser();
   <!-- ADD/EDIT TASK MODAL -->
   <div class="modal fade" id="addTaskModal" tabindex="-1" aria-labelledby="addTaskModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header" style="background: #F1F0E4;">
-          <h5 class="modal-title" id="addTaskModalLabel">Add New Task</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="modal-content" style="border: none; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+        <div class="modal-header" style="background: #F1F0E4; border-radius: 20px 20px 0 0; border-bottom: 2px solid #DDDAD0; padding: 1.5rem;">
+          <div class="d-flex align-items-center">
+            <i class="bi bi-plus-circle-fill me-3" style="color: #896C6C; font-size: 1.5rem;"></i>
+            <h5 class="modal-title mb-0 fw-bold" id="addTaskModalLabel" style="color: #333;">Add New Task</h5>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="background-size: 1.2rem;"></button>
         </div>
-        <div class="modal-body">
+        <div class="modal-body" style="padding: 2rem;">
           <form id="taskForm">
             <input type="hidden" id="taskId" value="">
-            <div class="row">
-              <div class="col-12 mb-3">
-                <label for="taskTitle" class="form-label">Title *</label>
-                <input type="text" class="form-control" id="taskTitle" required>
-              </div>
-              <div class="col-12 mb-3">
-                <label for="taskDescription" class="form-label">Description</label>
-                <textarea class="form-control" id="taskDescription" rows="3"></textarea>
-              </div>
-              <div class="col-12 col-md-6 mb-3">
-                <label for="taskDeadline" class="form-label">Deadline</label>
-                <input type="datetime-local" class="form-control" id="taskDeadline">
-              </div>
-              <div class="col-12 col-md-6 mb-3">
-                <label for="taskPriority" class="form-label">Priority</label>
-                <select class="form-select" id="taskPriority">
-                  <option value="low">Low</option>
-                  <option value="medium" selected>Medium</option>
-                  <option value="high">High</option>
-                </select>
-              </div>
-              <div class="col-12 mb-3">
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" id="taskReminder">
-                  <label class="form-check-label" for="taskReminder">
-                    Set Reminder
-                  </label>
-                </div>
-              </div>
-              <div class="col-12" id="reminderSettings" style="display: none;">
-                <label for="reminderTime" class="form-label">Reminder Time</label>
-                <select class="form-select" id="reminderTime">
-                  <option value="15">15 minutes before</option>
-                  <option value="30">30 minutes before</option>
-                  <option value="60">1 hour before</option>
-                  <option value="1440">1 day before</option>
-                </select>
-              </div>
-            </div>
+            <div class="row g-4">
+               <div class="col-12">
+                 <label for="taskTitle" class="form-label fw-semibold d-flex align-items-center" style="color: #333; font-size: 1rem;">
+                   <i class="bi bi-pencil-square me-2" style="color: #896C6C;"></i>Task Title *
+                 </label>
+                 <input type="text" class="form-control form-control-lg" id="taskTitle" required placeholder="Enter your task title..." style="border: 2px solid #DDDAD0; border-radius: 15px; padding: 12px 16px;">
+               </div>
+               <div class="col-12">
+                 <label for="taskDescription" class="form-label fw-semibold d-flex align-items-center" style="color: #333; font-size: 1rem;">
+                   <i class="bi bi-text-paragraph me-2" style="color: #896C6C;"></i>Description
+                 </label>
+                 <textarea class="form-control" id="taskDescription" rows="4" placeholder="Add task details..." style="border: 2px solid #DDDAD0; border-radius: 15px; padding: 12px 16px; resize: vertical;"></textarea>
+               </div>
+               <div class="col-12 col-md-6">
+                 <label for="taskDeadline" class="form-label fw-semibold d-flex align-items-center" style="color: #333; font-size: 1rem;">
+                   <i class="bi bi-calendar3 me-2" style="color: #896C6C;"></i>Deadline
+                 </label>
+                 <input type="datetime-local" class="form-control form-control-lg" id="taskDeadline" style="border: 2px solid #DDDAD0; border-radius: 15px; padding: 12px 16px;">
+               </div>
+               <div class="col-12 col-md-6">
+                 <label for="taskPriority" class="form-label fw-semibold d-flex align-items-center" style="color: #333; font-size: 1rem;">
+                   <i class="bi bi-flag me-2" style="color: #896C6C;"></i>Priority
+                 </label>
+                 <select class="form-select form-select-lg" id="taskPriority" style="border: 2px solid #DDDAD0; border-radius: 15px; padding: 12px 16px;">
+                   <option value="low">Low Priority</option>
+                   <option value="medium" selected>Medium Priority</option>
+                   <option value="high">High Priority</option>
+                 </select>
+               </div>
+               <div class="col-12">
+                 <div class="form-check p-3" style="background: #F8F9FA; border-radius: 15px; border: 2px solid #E9ECEF;">
+                   <input class="form-check-input" type="checkbox" id="taskReminder" style="transform: scale(1.2);">
+                   <label class="form-check-label fw-semibold ms-2 d-flex align-items-center" for="taskReminder" style="color: #333;">
+                     <i class="bi bi-bell me-2" style="color: #896C6C;"></i>Set Reminder
+                   </label>
+                 </div>
+               </div>
+               <div class="col-12" id="reminderSettings" style="display: none;">
+                 <label for="reminderTime" class="form-label fw-semibold d-flex align-items-center" style="color: #333; font-size: 1rem;">
+                   <i class="bi bi-clock me-2" style="color: #896C6C;"></i>Reminder Time
+                 </label>
+                 <select class="form-select form-select-lg" id="reminderTime" style="border: 2px solid #DDDAD0; border-radius: 15px; padding: 12px 16px;">
+                   <option value="15">15 minutes before</option>
+                   <option value="30">30 minutes before</option>
+                   <option value="60">1 hour before</option>
+                   <option value="1440">1 day before</option>
+                 </select>
+               </div>
+             </div>
           </form>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-primary" id="saveTaskBtn" style="background: #896C6C; border: none;">Save Task</button>
+        <div class="modal-footer" style="border-top: 2px solid #DDDAD0; padding: 1.5rem; border-radius: 0 0 20px 20px;">
+          <button type="button" class="btn btn-lg px-4" data-bs-dismiss="modal" style="background: #E9ECEF; color: #6c757d; border: 2px solid #DEE2E6; border-radius: 15px; font-weight: 600;">Cancel</button>
+          <button type="button" class="btn btn-lg px-4" id="saveTaskBtn" style="background: #896C6C; color: white; border: 2px solid #896C6C; border-radius: 15px; font-weight: 600;">💾 Save Task</button>
         </div>
       </div>
     </div>
@@ -221,7 +243,7 @@ $user = getCurrentUser();
 
   <script>
     // Global variables
-    let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+    let tasks = [];
     let editingTaskId = null;
 
     // Sidebar functionality
@@ -292,7 +314,7 @@ $user = getCurrentUser();
     });
 
     // Save task
-    document.getElementById('saveTaskBtn').addEventListener('click', function() {
+    document.getElementById('saveTaskBtn').addEventListener('click', async function() {
       const title = document.getElementById('taskTitle').value.trim();
       const description = document.getElementById('taskDescription').value.trim();
       const deadline = document.getElementById('taskDeadline').value;
@@ -310,122 +332,163 @@ $user = getCurrentUser();
         return;
       }
 
-      const task = {
-        id: taskId || Date.now().toString(),
+      const taskData = {
         title,
         description,
-        deadline,
+        deadline: deadline || null,
         priority,
         reminder,
-        reminderTime: reminder ? reminderTime : null,
-        status: 'pending',
-        createdAt: taskId ? tasks.find(t => t.id === taskId).createdAt : new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        reminder_time: reminder ? parseInt(reminderTime) : 15,
+        status: 'pending'
       };
 
-      if (taskId) {
-        // Edit existing task
-        const index = tasks.findIndex(t => t.id === taskId);
-        tasks[index] = task;
-        showToast('Task updated successfully!');
-      } else {
-        // Add new task
-        tasks.push(task);
-        showToast('Task added successfully!');
-      }
+      try {
+        let response;
+        if (taskId) {
+          // Edit existing task
+          taskData.id = taskId;
+          response = await fetch('/api/tasks.php', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(taskData)
+          });
+        } else {
+          // Add new task
+          response = await fetch('/api/tasks.php', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(taskData)
+          });
+        }
 
-      // Save to localStorage
-      localStorage.setItem('tasks', JSON.stringify(tasks));
-      
-      // Reset form and close modal
-      resetForm();
-      bootstrap.Modal.getInstance(document.getElementById('addTaskModal')).hide();
-      
-      // Reload tasks
-      loadTasks();
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.error || 'Failed to save task');
+        }
+
+        showToast(taskId ? 'Task updated successfully!' : 'Task added successfully!');
+        
+        // Reset form and close modal
+        resetForm();
+        bootstrap.Modal.getInstance(document.getElementById('addTaskModal')).hide();
+        
+        // Reload tasks
+        await loadTasks();
+      } catch (error) {
+        console.error('Error saving task:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: error.message
+        });
+      }
     });
 
     // Load and display tasks
-    function loadTasks() {
+    async function loadTasks() {
       const container = document.getElementById('tasksContainer');
       const searchTerm = document.getElementById('searchTasks').value.toLowerCase();
       const priorityFilter = document.getElementById('filterPriority').value;
       const statusFilter = document.getElementById('filterStatus').value;
 
-      // Filter tasks
-      let filteredTasks = tasks.filter(task => {
-        const matchesSearch = task.title.toLowerCase().includes(searchTerm) || 
-                            task.description.toLowerCase().includes(searchTerm);
-        const matchesPriority = !priorityFilter || task.priority === priorityFilter;
-        const matchesStatus = !statusFilter || task.status === statusFilter;
-        
-        return matchesSearch && matchesPriority && matchesStatus;
-      });
+      try {
+        // Build query parameters
+        const params = new URLSearchParams();
+        if (searchTerm) params.append('search', searchTerm);
+        if (priorityFilter) params.append('priority', priorityFilter);
+        if (statusFilter) params.append('status', statusFilter);
 
-      // Sort by deadline and priority
-      filteredTasks.sort((a, b) => {
-        if (a.status !== b.status) {
-          return a.status === 'pending' ? -1 : 1;
-        }
-        if (a.deadline && b.deadline) {
-          return new Date(a.deadline) - new Date(b.deadline);
-        }
-        const priorityOrder = { high: 3, medium: 2, low: 1 };
-        return priorityOrder[b.priority] - priorityOrder[a.priority];
-      });
+        const response = await fetch(`/api/tasks.php?${params.toString()}`);
+        const data = await response.json();
 
-      if (filteredTasks.length === 0) {
+        if (!data.success) {
+          throw new Error(data.error || 'Failed to load tasks');
+        }
+
+        tasks = data.tasks;
+
+        if (tasks.length === 0) {
+          container.innerHTML = `
+            <div class="text-center py-5">
+              <i class="bi bi-list-task" style="font-size: 4rem; color: #ccc;"></i>
+              <h4 class="mt-3 text-muted">No tasks found</h4>
+              <p class="text-muted">Add your first task to get started!</p>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = tasks.map(task => createTaskCard(task)).join('');
+      } catch (error) {
+        console.error('Error loading tasks:', error);
         container.innerHTML = `
           <div class="text-center py-5">
-            <i class="bi bi-list-task" style="font-size: 4rem; color: #ccc;"></i>
-            <h4 class="mt-3 text-muted">No tasks found</h4>
-            <p class="text-muted">Add your first task to get started!</p>
+            <i class="bi bi-exclamation-triangle" style="font-size: 4rem; color: #dc3545;"></i>
+            <h4 class="mt-3 text-danger">Error loading tasks</h4>
+            <p class="text-muted">${error.message}</p>
           </div>
         `;
-        return;
       }
-
-      container.innerHTML = filteredTasks.map(task => createTaskCard(task)).join('');
     }
 
     // Create task card HTML
     function createTaskCard(task) {
       const priorityColors = {
-        high: 'danger',
-        medium: 'warning',
-        low: 'success'
+        high: '#dc3545',
+        medium: '#6c757d',
+        low: '#198754'
+      };
+      
+      const priorityIcons = {
+        high: 'exclamation-triangle-fill',
+        medium: 'dash-circle-fill',
+        low: 'check-circle-fill'
       };
       
       const priorityColor = priorityColors[task.priority];
+      const priorityIcon = priorityIcons[task.priority];
       const isOverdue = task.deadline && new Date(task.deadline) < new Date() && task.status === 'pending';
       const deadlineText = task.deadline ? new Date(task.deadline).toLocaleString() : 'No deadline';
       
       return `
-        <div class="card mb-3 task-card ${task.status === 'completed' ? 'completed-task' : ''}" data-task-id="${task.id}">
-          <div class="card-body">
+        <div class="card mb-4 task-card ${task.status === 'completed' ? 'completed-task' : ''}" data-task-id="${task.id}" style="border: none; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); background: ${task.status === 'completed' ? '#f8f9fa' : 'white'}; border-left: 5px solid ${priorityColor};">
+          <div class="card-body p-4">
             <div class="d-flex justify-content-between align-items-start">
-              <div class="d-flex align-items-start">
+              <div class="d-flex align-items-start flex-grow-1">
                 <div class="task-checkbox me-3 mt-1" onclick="toggleTaskStatus('${task.id}')" title="${task.status === 'completed' ? 'Mark as Pending' : 'Mark as Completed'}">
-                  <i class="bi bi-${task.status === 'completed' ? 'check-circle-fill' : 'circle'}" style="font-size: 1.2rem; color: ${task.status === 'completed' ? '#198754' : '#6c757d'}; cursor: pointer;"></i>
+                  <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: ${task.status === 'completed' ? '#198754' : '#e9ecef'}; cursor: pointer; transition: all 0.3s ease;">
+                    <i class="bi bi-${task.status === 'completed' ? 'check' : ''}" style="font-size: 1.1rem; color: ${task.status === 'completed' ? 'white' : '#6c757d'};"></i>
+                  </div>
                 </div>
                 <div class="flex-grow-1">
-                  <div class="d-flex align-items-center mb-2">
-                    <h5 class="card-title mb-0 ${task.status === 'completed' ? 'text-decoration-line-through text-muted' : ''}">${task.title}</h5>
-                    <span class="badge bg-${priorityColor} ms-2">${task.priority.toUpperCase()}</span>
-                    ${task.reminder ? '<i class="bi bi-bell-fill ms-2" style="color: #896C6C;"></i>' : ''}
-                    ${isOverdue ? '<span class="badge bg-danger ms-2">OVERDUE</span>' : ''}
+                  <div class="d-flex align-items-center mb-3">
+                    <h5 class="card-title mb-0 fw-bold ${task.status === 'completed' ? 'text-decoration-line-through text-muted' : ''}" style="color: ${task.status === 'completed' ? '#6c757d' : '#333'}; font-size: 1.25rem;">${task.title}</h5>
+                    <span class="badge ms-3 px-3 py-2 d-flex align-items-center" style="background: ${priorityColor}; color: white; border-radius: 25px; font-size: 0.8rem; font-weight: 600;">
+                      <i class="bi bi-${priorityIcon} me-2"></i>${task.priority.toUpperCase()}
+                    </span>
+                    ${task.reminder ? '<i class="bi bi-bell-fill ms-3" style="color: #896C6C; font-size: 1.1rem;" title="Reminder Set"></i>' : ''}
+                    ${isOverdue ? '<span class="badge bg-danger ms-3 px-3 py-2 d-flex align-items-center" style="border-radius: 25px; animation: pulse 2s infinite;"><i class="bi bi-exclamation-triangle-fill me-2"></i>OVERDUE</span>' : ''}
                   </div>
-                ${task.description ? `<p class="card-text ${task.status === 'completed' ? 'text-muted' : ''}">${task.description}</p>` : ''}
-                <small class="text-muted">
-                  <i class="bi bi-calendar me-1"></i>${deadlineText}
-                </small>
+                  ${task.description ? `<p class="card-text mb-3 ${task.status === 'completed' ? 'text-muted' : ''}" style="color: #666; line-height: 1.6; font-size: 1rem;">${task.description}</p>` : ''}
+                  <div class="d-flex align-items-center">
+                    <small class="text-muted d-flex align-items-center" style="font-size: 0.9rem;">
+                      <i class="bi bi-calendar3 me-2" style="color: #896C6C;"></i>
+                      <span>${deadlineText}</span>
+                    </small>
+                  </div>
+                </div>
               </div>
-              <div class="d-flex gap-2">
-                <button class="btn btn-sm btn-outline-primary" onclick="editTask('${task.id}')" title="Edit Task">
-                  <i class="bi bi-pencil"></i>
+              <div class="d-flex gap-2 ms-3">
+                <button class="btn btn-sm" onclick="editTask('${task.id}')" title="Edit Task" style="background: #F1F0E4; color: #896C6C; border: 2px solid #DDDAD0; border-radius: 12px; padding: 8px 12px; transition: all 0.3s ease;">
+                  <i class="bi bi-pencil-square"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-danger" onclick="deleteTask('${task.id}')" title="Delete Task">
-                  <i class="bi bi-trash"></i>
+                <button class="btn btn-sm" onclick="deleteTask('${task.id}')" title="Delete Task" style="background: #ffe6e6; color: #dc3545; border: 2px solid #ffcccc; border-radius: 12px; padding: 8px 12px; transition: all 0.3s ease;">
+                  <i class="bi bi-trash3"></i>
                 </button>
               </div>
             </div>
@@ -435,29 +498,69 @@ $user = getCurrentUser();
     }
 
     // Toggle task status
-    function toggleTaskStatus(taskId) {
-      const task = tasks.find(t => t.id === taskId);
+    async function toggleTaskStatus(taskId) {
+      const task = tasks.find(t => t.id == taskId);
       if (task) {
-        task.status = task.status === 'completed' ? 'pending' : 'completed';
-        task.updatedAt = new Date().toISOString();
-        localStorage.setItem('tasks', JSON.stringify(tasks));
-        showToast(`Task marked as ${task.status}!`);
-        loadTasks();
+        const newStatus = task.status === 'completed' ? 'pending' : 'completed';
+        
+        try {
+          const response = await fetch('/api/tasks.php', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              id: taskId,
+              title: task.title,
+              description: task.description,
+              priority: task.priority,
+              deadline: task.deadline,
+              reminder: task.reminder,
+              reminder_time: task.reminder_time,
+              status: newStatus
+            })
+          });
+
+          const data = await response.json();
+
+          if (!data.success) {
+            throw new Error(data.error || 'Failed to update task');
+          }
+
+          showToast(`Task marked as ${newStatus}!`);
+          await loadTasks();
+        } catch (error) {
+          console.error('Error updating task status:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.message
+          });
+        }
       }
     }
 
     // Edit task
     function editTask(taskId) {
-      const task = tasks.find(t => t.id === taskId);
+      const task = tasks.find(t => t.id == taskId);
       if (task) {
         // Populate form
         document.getElementById('taskId').value = task.id;
         document.getElementById('taskTitle').value = task.title;
         document.getElementById('taskDescription').value = task.description || '';
-        document.getElementById('taskDeadline').value = task.deadline || '';
+        
+        // Format deadline for datetime-local input
+        if (task.deadline) {
+          const date = new Date(task.deadline);
+          const formattedDate = date.toISOString().slice(0, 16);
+          document.getElementById('taskDeadline').value = formattedDate;
+        } else {
+          document.getElementById('taskDeadline').value = '';
+        }
+        
         document.getElementById('taskPriority').value = task.priority;
         document.getElementById('taskReminder').checked = task.reminder || false;
-        document.getElementById('reminderTime').value = task.reminderTime || '15';
+        document.getElementById('reminderTime').value = task.reminder_time || '15';
         
         // Show/hide reminder settings
         const reminderSettings = document.getElementById('reminderSettings');
@@ -475,18 +578,39 @@ $user = getCurrentUser();
     function deleteTask(taskId) {
       Swal.fire({
         title: 'Are you sure?',
-        text: 'This action cannot be undone!',
+        text: "You won't be able to revert this!",
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#dc3545',
+        confirmButtonColor: '#d33',
         cancelButtonColor: '#6c757d',
         confirmButtonText: 'Yes, delete it!'
-      }).then((result) => {
+      }).then(async (result) => {
         if (result.isConfirmed) {
-          tasks = tasks.filter(t => t.id !== taskId);
-          localStorage.setItem('tasks', JSON.stringify(tasks));
-          showToast('Task deleted successfully!');
-          loadTasks();
+          try {
+            const response = await fetch('/api/tasks.php', {
+              method: 'DELETE',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ id: taskId })
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+              throw new Error(data.error || 'Failed to delete task');
+            }
+
+            showToast('Task deleted successfully!');
+            await loadTasks();
+          } catch (error) {
+            console.error('Error deleting task:', error);
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: error.message
+            });
+          }
         }
       });
     }
