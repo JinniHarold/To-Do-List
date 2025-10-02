@@ -118,33 +118,39 @@ $user = getCurrentUser();
           </div>
         </div>
 
-        <!-- Filter and Search Section -->
+        <!-- Tab Navigation -->
         <div class="card mb-4 border-0 shadow-sm" style="background: #F1F0E4; border-radius: 20px;">
           <div class="card-body p-4">
-            <div class="d-flex align-items-center mb-3">
-              <i class="bi bi-funnel fs-4 me-3" style="color: #896C6C;"></i>
-              <h5 class="mb-0 fw-bold" style="color: #333;">Filter & Search</h5>
-            </div>
+            <!-- Tab Headers -->
+            <ul class="nav nav-pills mb-4" id="taskTabs" role="tablist" style="background: white; border-radius: 15px; padding: 8px;">
+              <li class="nav-item" role="presentation" style="flex: 1;">
+                <button class="nav-link active w-100 fw-bold" id="active-tab" data-bs-toggle="pill" data-bs-target="#active-tasks" type="button" role="tab" aria-controls="active-tasks" aria-selected="true" style="border-radius: 12px; background: #896C6C; color: white; border: none; padding: 12px 20px; transition: all 0.3s ease;">
+                  <i class="bi bi-list-task me-2"></i>Active Tasks
+                  <span class="badge ms-2" id="activeTaskCount" style="background: rgba(255,255,255,0.3); color: white;">0</span>
+                </button>
+              </li>
+              <li class="nav-item" role="presentation" style="flex: 1;">
+                <button class="nav-link w-100 fw-bold" id="completed-tab" data-bs-toggle="pill" data-bs-target="#completed-tasks" type="button" role="tab" aria-controls="completed-tasks" aria-selected="false" style="border-radius: 12px; color: #6c757d; border: none; padding: 12px 20px; transition: all 0.3s ease;">
+                  <i class="bi bi-check-circle me-2"></i>Completed Tasks
+                  <span class="badge ms-2" id="completedTaskCount" style="background: #6c757d; color: white;">0</span>
+                </button>
+              </li>
+            </ul>
+
+            <!-- Search and Filter Section -->
             <div class="row g-3">
-              <div class="col-12 col-lg-6">
+              <div class="col-12 col-lg-8">
                 <div class="input-group">
                   <span class="input-group-text" style="background: white; border: 2px solid #DDDAD0; border-right: none;"><i class="bi bi-search" style="color: #896C6C;"></i></span>
                   <input type="text" class="form-control form-control-lg" id="searchTasks" placeholder="Search tasks..." style="border: 2px solid #DDDAD0; border-left: none; border-radius: 0 15px 15px 0;">
                 </div>
               </div>
-              <div class="col-12 col-lg-3">
+              <div class="col-12 col-lg-4">
                  <select class="form-select form-select-lg" id="filterPriority" style="border: 2px solid #DDDAD0; border-radius: 15px;">
                    <option value="">All Priorities</option>
                    <option value="high">High Priority</option>
                    <option value="medium">Medium Priority</option>
                    <option value="low">Low Priority</option>
-                 </select>
-               </div>
-               <div class="col-12 col-lg-3">
-                 <select class="form-select form-select-lg" id="filterStatus" style="border: 2px solid #DDDAD0; border-radius: 15px;">
-                   <option value="">All Status</option>
-                   <option value="pending">Pending</option>
-                   <option value="completed">Completed</option>
                  </select>
                </div>
             </div>
@@ -154,8 +160,20 @@ $user = getCurrentUser();
         <!-- Tasks Container -->
         <div class="row">
           <div class="col-12">
-            <div id="tasksContainer">
-              <!-- Tasks will be dynamically loaded here -->
+            <div class="tab-content" id="taskTabContent">
+              <!-- Active Tasks Tab -->
+              <div class="tab-pane fade show active" id="active-tasks" role="tabpanel" aria-labelledby="active-tab">
+                <div id="activeTasksContainer">
+                  <!-- Active tasks will be dynamically loaded here -->
+                </div>
+              </div>
+              
+              <!-- Completed Tasks Tab -->
+              <div class="tab-pane fade" id="completed-tasks" role="tabpanel" aria-labelledby="completed-tab">
+                <div id="completedTasksContainer">
+                  <!-- Completed tasks will be dynamically loaded here -->
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -391,17 +409,16 @@ $user = getCurrentUser();
 
     // Load and display tasks
     async function loadTasks() {
-      const container = document.getElementById('tasksContainer');
+      const activeContainer = document.getElementById('activeTasksContainer');
+      const completedContainer = document.getElementById('completedTasksContainer');
       const searchTerm = document.getElementById('searchTasks').value.toLowerCase();
       const priorityFilter = document.getElementById('filterPriority').value;
-      const statusFilter = document.getElementById('filterStatus').value;
 
       try {
         // Build query parameters
         const params = new URLSearchParams();
         if (searchTerm) params.append('search', searchTerm);
         if (priorityFilter) params.append('priority', priorityFilter);
-        if (statusFilter) params.append('status', statusFilter);
 
         const response = await fetch(`/api/tasks.php?${params.toString()}`);
         const data = await response.json();
@@ -412,27 +429,50 @@ $user = getCurrentUser();
 
         tasks = data.tasks;
 
-        if (tasks.length === 0) {
-          container.innerHTML = `
+        // Separate tasks by status
+        const activeTasks = tasks.filter(task => task.status === 'pending');
+        const completedTasks = tasks.filter(task => task.status === 'completed');
+
+        // Update task counts in tabs
+        document.getElementById('activeTaskCount').textContent = activeTasks.length;
+        document.getElementById('completedTaskCount').textContent = completedTasks.length;
+
+        // Display active tasks
+        if (activeTasks.length === 0) {
+          activeContainer.innerHTML = `
             <div class="text-center py-5">
               <i class="bi bi-list-task" style="font-size: 4rem; color: #ccc;"></i>
-              <h4 class="mt-3 text-muted">No tasks found</h4>
+              <h4 class="mt-3 text-muted">No active tasks</h4>
               <p class="text-muted">Add your first task to get started!</p>
             </div>
           `;
-          return;
+        } else {
+          activeContainer.innerHTML = activeTasks.map(task => createTaskCard(task)).join('');
         }
 
-        container.innerHTML = tasks.map(task => createTaskCard(task)).join('');
+        // Display completed tasks
+        if (completedTasks.length === 0) {
+          completedContainer.innerHTML = `
+            <div class="text-center py-5">
+              <i class="bi bi-check-circle" style="font-size: 4rem; color: #ccc;"></i>
+              <h4 class="mt-3 text-muted">No completed tasks</h4>
+              <p class="text-muted">Complete some tasks to see them here!</p>
+            </div>
+          `;
+        } else {
+          completedContainer.innerHTML = completedTasks.map(task => createTaskCard(task)).join('');
+        }
       } catch (error) {
         console.error('Error loading tasks:', error);
-        container.innerHTML = `
+        const errorHTML = `
           <div class="text-center py-5">
             <i class="bi bi-exclamation-triangle" style="font-size: 4rem; color: #dc3545;"></i>
             <h4 class="mt-3 text-danger">Error loading tasks</h4>
             <p class="text-muted">${error.message}</p>
           </div>
         `;
+        activeContainer.innerHTML = errorHTML;
+        completedContainer.innerHTML = errorHTML;
       }
     }
 
@@ -633,7 +673,31 @@ $user = getCurrentUser();
     // Search and filter event listeners
     document.getElementById('searchTasks').addEventListener('input', loadTasks);
     document.getElementById('filterPriority').addEventListener('change', loadTasks);
-    document.getElementById('filterStatus').addEventListener('change', loadTasks);
+
+    // Tab switching event listeners
+    document.getElementById('active-tab').addEventListener('click', function() {
+      this.style.background = '#896C6C';
+      this.style.color = 'white';
+      document.getElementById('activeTaskCount').style.background = 'rgba(255,255,255,0.3)';
+      document.getElementById('activeTaskCount').style.color = 'white';
+      
+      document.getElementById('completed-tab').style.background = 'transparent';
+      document.getElementById('completed-tab').style.color = '#6c757d';
+      document.getElementById('completedTaskCount').style.background = '#6c757d';
+      document.getElementById('completedTaskCount').style.color = 'white';
+    });
+
+    document.getElementById('completed-tab').addEventListener('click', function() {
+      this.style.background = '#6c757d';
+      this.style.color = 'white';
+      document.getElementById('completedTaskCount').style.background = 'rgba(255,255,255,0.3)';
+      document.getElementById('completedTaskCount').style.color = 'white';
+      
+      document.getElementById('active-tab').style.background = 'transparent';
+      document.getElementById('active-tab').style.color = '#896C6C';
+      document.getElementById('activeTaskCount').style.background = '#896C6C';
+      document.getElementById('activeTaskCount').style.color = 'white';
+    });
 
     // Reset form when modal is hidden
     document.getElementById('addTaskModal').addEventListener('hidden.bs.modal', resetForm);

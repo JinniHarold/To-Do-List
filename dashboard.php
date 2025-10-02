@@ -53,8 +53,8 @@ $user = getCurrentUser();
         </li>
         <li class="nav-item">
           <a class="nav-link" href="#">
-            <i class="bi bi-check-circle me-2"></i>
-            Completed
+            <i class="bi bi-calendar-check me-2"></i>
+            Calendar
           </a>
         </li>
         <li class="nav-item">
