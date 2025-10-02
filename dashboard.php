@@ -52,7 +52,7 @@ $user = getCurrentUser();
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="#">
+          <a class="nav-link" href="calendar.php">
             <i class="bi bi-calendar-check me-2"></i>
             Calendar
           </a>
