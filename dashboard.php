@@ -254,18 +254,28 @@ $user = getCurrentUser();
     async function fetchUserData() {
       try {
         const response = await fetch('api/user.php');
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
         
-        if (data.success) {
-          const fullName = `${data.user.first_name}`;
+        if (data.success && data.user) {
+          const fullName = data.user.first_name || data.user.username || 'User';
           document.getElementById('userName').textContent = fullName;
         } else {
           // If not authenticated, redirect to login
+          console.log('User not authenticated, redirecting to login');
           window.location.href = 'login.php';
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
-        document.getElementById('userName').textContent = 'User';
+        // Set a default name instead of leaving it blank
+        const userNameElement = document.getElementById('userName');
+        if (userNameElement) {
+          userNameElement.textContent = 'User';
+        }
       }
     }
 
