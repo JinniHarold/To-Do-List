@@ -1,8 +1,25 @@
 <?php
-session_start();
-require_once '../config/database.php';
+// Ensure we only output JSON
+ob_start();
 
+// Start session if not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Set JSON header first
 header('Content-Type: application/json');
+header('Cache-Control: no-cache, must-revalidate');
+
+// Include database connection with error handling
+try {
+    require_once '../config/database.php';
+} catch (Exception $e) {
+    ob_clean();
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => 'Database connection failed']);
+    exit;
+}
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
@@ -155,9 +172,9 @@ try {
                 $params[] = $interestsStr;
             }
             
-            if (isset($input['profilePicture'])) {
+            if (isset($input['profile_picture'])) {
                 $updateFields[] = 'profile_picture = ?';
-                $params[] = $input['profilePicture'];
+                $params[] = $input['profile_picture'];
             }
             
             if (empty($updateFields)) {

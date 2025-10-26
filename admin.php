@@ -98,11 +98,11 @@ $user = getCurrentUser();
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">
-                        <i class="bi bi-calendar-check me-2"></i>
-                        Calendar
-                    </a>
-                </li>
+          <a class="nav-link" href="calendar.php">
+            <i class="bi bi-calendar-check me-2"></i>
+            Calendar
+          </a>
+        </li>
                 <li class="nav-item">
                     <a class="nav-link active" href="admin.php">
                         <i class="bi bi-people me-2"></i>

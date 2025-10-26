@@ -128,11 +128,11 @@ $user = getCurrentUser();
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">
-                        <i class="bi bi-calendar-check me-2"></i>
-                        Calendar
-                    </a>
-                </li>
+          <a class="nav-link" href="calendar.php">
+            <i class="bi bi-calendar-check me-2"></i>
+            Calendar
+          </a>
+        </li>
                 <li class="nav-item">
                     <a class="nav-link" href="admin.php">
                         <i class="bi bi-people me-2"></i>
@@ -405,7 +405,7 @@ $user = getCurrentUser();
         // Load profile data from API
         async function loadProfileData() {
             try {
-                const response = await fetch('/api/profile.php');
+                const response = await fetch('api/profile-clean.php');
                 const data = await response.json();
                 
                 if (!data.success) {
@@ -423,7 +423,7 @@ $user = getCurrentUser();
         // Save profile data to API
         async function saveProfileData(updateData) {
             try {
-                const response = await fetch('/api/profile.php', {
+                const response = await fetch('api/profile-clean.php', {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'
@@ -602,7 +602,7 @@ $user = getCurrentUser();
         document.getElementById('bioForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const bio = document.getElementById('bioText').value.trim();
+            const bio = document.getElementById('bio').value.trim();
             const interestsInput = document.getElementById('interests').value.trim();
             
             try {
@@ -653,7 +653,7 @@ $user = getCurrentUser();
             }
             
             try {
-                const response = await fetch('/api/profile.php', {
+                const response = await fetch('api/profile.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
