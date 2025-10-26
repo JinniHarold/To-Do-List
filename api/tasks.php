@@ -1,195 +1,182 @@
 <?php
-require_once '../includes/auth.php';
+session_start();
 require_once '../config/database.php';
 
 header('Content-Type: application/json');
+header('Cache-Control: no-cache');
 
-if (!isLoggedIn()) {
+// Check authentication
+if (!isset($_SESSION['user_id'])) {
     http_response_code(401);
-    echo json_encode(['error' => 'Not authenticated']);
-    exit();
+    die(json_encode(['success' => false, 'message' => 'Not authenticated']));
 }
 
-$user = getCurrentUser();
-$userId = $user['id'];
+$userId = $_SESSION['user_id'];
 $method = $_SERVER['REQUEST_METHOD'];
 
 try {
-    switch ($method) {
-        case 'GET':
-            // Get all tasks for the user
-            $search = $_GET['search'] ?? '';
-            $priority = $_GET['priority'] ?? '';
-            $status = $_GET['status'] ?? '';
-            
-            $sql = "SELECT * FROM tasks WHERE user_id = ?";
-            $params = [$userId];
-            
-            // Add search filter
-            if (!empty($search)) {
-                $sql .= " AND (title LIKE ? OR description LIKE ?)";
-                $searchTerm = "%$search%";
-                $params[] = $searchTerm;
-                $params[] = $searchTerm;
+    if ($method == 'GET') {
+        // Get tasks
+        $stmt = $pdo->prepare("SELECT * FROM tasks WHERE user_id = ? ORDER BY id DESC");
+        $stmt->execute([$userId]);
+        $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        echo json_encode(['success' => true, 'tasks' => $tasks]);
+        
+    } elseif ($method == 'POST') {
+        // Create task
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        if (!$input || !isset($input['title']) || empty(trim($input['title']))) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Task title is required']);
+            exit;
+        }
+        
+        // Handle deadline - convert to MySQL datetime format if provided
+        $deadline = null;
+        if (isset($input['deadline']) && !empty($input['deadline'])) {
+            try {
+                $deadline = date('Y-m-d H:i:s', strtotime($input['deadline']));
+            } catch (Exception $e) {
+                $deadline = null;
             }
-            
-            // Add priority filter
-            if (!empty($priority)) {
-                $sql .= " AND priority = ?";
-                $params[] = $priority;
+        }
+        
+        // Handle reminder settings
+        $reminder = isset($input['reminder']) ? (bool)$input['reminder'] : false;
+        $reminderTime = isset($input['reminder_time']) ? (int)$input['reminder_time'] : 15;
+        
+        $stmt = $pdo->prepare("INSERT INTO tasks (user_id, title, description, priority, deadline, reminder, reminder_time, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')");
+        $stmt->execute([
+            $userId, 
+            trim($input['title']), 
+            $input['description'] ?? '', 
+            $input['priority'] ?? 'medium',
+            $deadline,
+            $reminder,
+            $reminderTime
+        ]);
+        
+        $taskId = $pdo->lastInsertId();
+        echo json_encode([
+            'success' => true, 
+            'message' => 'Task created successfully',
+            'task_id' => $taskId
+        ]);
+        
+    } elseif ($method == 'PUT') {
+        // Update task
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        if (!$input || !isset($input['id'])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Task ID is required']);
+            exit;
+        }
+        
+        // Build dynamic update query
+        $updateFields = [];
+        $params = [];
+        
+        if (isset($input['title'])) {
+            $updateFields[] = 'title = ?';
+            $params[] = trim($input['title']);
+        }
+        
+        if (isset($input['description'])) {
+            $updateFields[] = 'description = ?';
+            $params[] = $input['description'];
+        }
+        
+        if (isset($input['priority'])) {
+            $updateFields[] = 'priority = ?';
+            $params[] = $input['priority'];
+        }
+        
+        if (isset($input['deadline'])) {
+            $deadline = null;
+            if (!empty($input['deadline'])) {
+                try {
+                    $deadline = date('Y-m-d H:i:s', strtotime($input['deadline']));
+                } catch (Exception $e) {
+                    $deadline = null;
+                }
             }
+            $updateFields[] = 'deadline = ?';
+            $params[] = $deadline;
+        }
+        
+        if (isset($input['reminder'])) {
+            $updateFields[] = 'reminder = ?';
+            $params[] = (bool)$input['reminder'];
+        }
+        
+        if (isset($input['reminder_time'])) {
+            $updateFields[] = 'reminder_time = ?';
+            $params[] = (int)$input['reminder_time'];
+        }
+        
+        if (isset($input['status'])) {
+            $updateFields[] = 'status = ?';
+            $params[] = $input['status'];
             
-            // Add status filter
-            if (!empty($status)) {
-                $sql .= " AND status = ?";
-                $params[] = $status;
-            }
-            
-            $sql .= " ORDER BY 
-                CASE 
-                    WHEN status = 'pending' THEN 0 
-                    ELSE 1 
-                END,
-                CASE 
-                    WHEN deadline IS NOT NULL AND deadline < NOW() AND status = 'pending' THEN 0
-                    WHEN deadline IS NOT NULL THEN 1
-                    ELSE 2
-                END,
-                CASE priority 
-                    WHEN 'high' THEN 3 
-                    WHEN 'medium' THEN 2 
-                    WHEN 'low' THEN 1 
-                END DESC,
-                deadline ASC";
-            
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($params);
-            $tasks = $stmt->fetchAll();
-            
-            echo json_encode(['success' => true, 'tasks' => $tasks]);
-            break;
-            
-        case 'POST':
-            // Create new task
-            $input = json_decode(file_get_contents('php://input'), true);
-            
-            if (empty($input['title'])) {
-                http_response_code(400);
-                echo json_encode(['error' => 'Title is required']);
-                exit();
-            }
-            
-            $sql = "INSERT INTO tasks (user_id, title, description, priority, deadline, reminder, reminder_time, status) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-            
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([
-                $userId,
-                $input['title'],
-                $input['description'] ?? '',
-                $input['priority'] ?? 'medium',
-                !empty($input['deadline']) ? $input['deadline'] : null,
-                isset($input['reminder']) ? (bool)$input['reminder'] : false,
-                $input['reminder_time'] ?? 15,
-                $input['status'] ?? 'pending'
-            ]);
-            
-            $taskId = $pdo->lastInsertId();
-            
-            // Fetch the created task
-            $stmt = $pdo->prepare("SELECT * FROM tasks WHERE id = ?");
-            $stmt->execute([$taskId]);
-            $task = $stmt->fetch();
-            
-            echo json_encode(['success' => true, 'task' => $task]);
-            break;
-            
-        case 'PUT':
-            // Update existing task
-            $input = json_decode(file_get_contents('php://input'), true);
-            
-            if (empty($input['id'])) {
-                http_response_code(400);
-                echo json_encode(['error' => 'Task ID is required']);
-                exit();
-            }
-            
-            // Check if task belongs to user
-            $stmt = $pdo->prepare("SELECT id FROM tasks WHERE id = ? AND user_id = ?");
-            $stmt->execute([$input['id'], $userId]);
-            if (!$stmt->fetch()) {
-                http_response_code(404);
-                echo json_encode(['error' => 'Task not found']);
-                exit();
-            }
-            
-            $sql = "UPDATE tasks SET 
-                    title = ?, 
-                    description = ?, 
-                    priority = ?, 
-                    deadline = ?, 
-                    reminder = ?, 
-                    reminder_time = ?, 
-                    status = ?,
-                    completed = ?
-                    WHERE id = ? AND user_id = ?";
-            
-            $completed = ($input['status'] ?? 'pending') === 'completed';
-            
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([
-                $input['title'],
-                $input['description'] ?? '',
-                $input['priority'] ?? 'medium',
-                !empty($input['deadline']) ? $input['deadline'] : null,
-                isset($input['reminder']) ? (bool)$input['reminder'] : false,
-                $input['reminder_time'] ?? 15,
-                $input['status'] ?? 'pending',
-                $completed,
-                $input['id'],
-                $userId
-            ]);
-            
-            // Fetch the updated task
-            $stmt = $pdo->prepare("SELECT * FROM tasks WHERE id = ?");
-            $stmt->execute([$input['id']]);
-            $task = $stmt->fetch();
-            
-            echo json_encode(['success' => true, 'task' => $task]);
-            break;
-            
-        case 'DELETE':
-            // Delete task
-            $input = json_decode(file_get_contents('php://input'), true);
-            
-            if (empty($input['id'])) {
-                http_response_code(400);
-                echo json_encode(['error' => 'Task ID is required']);
-                exit();
-            }
-            
-            // Check if task belongs to user
-            $stmt = $pdo->prepare("SELECT id FROM tasks WHERE id = ? AND user_id = ?");
-            $stmt->execute([$input['id'], $userId]);
-            if (!$stmt->fetch()) {
-                http_response_code(404);
-                echo json_encode(['error' => 'Task not found']);
-                exit();
-            }
-            
-            $stmt = $pdo->prepare("DELETE FROM tasks WHERE id = ? AND user_id = ?");
-            $stmt->execute([$input['id'], $userId]);
-            
+            $updateFields[] = 'completed = ?';
+            $params[] = ($input['status'] === 'completed') ? 1 : 0;
+        }
+        
+        if (empty($updateFields)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'No fields to update']);
+            exit;
+        }
+        
+        // Always update the timestamp
+        $updateFields[] = 'updated_at = CURRENT_TIMESTAMP';
+        $params[] = $input['id'];
+        $params[] = $userId;
+        
+        $sql = "UPDATE tasks SET " . implode(', ', $updateFields) . " WHERE id = ? AND user_id = ?";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        
+        if ($stmt->rowCount() > 0) {
+            echo json_encode(['success' => true, 'message' => 'Task updated successfully']);
+        } else {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'message' => 'Task not found or no changes made']);
+        }
+        
+    } elseif ($method == 'DELETE') {
+        // Delete task
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        if (!$input || !isset($input['id'])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Task ID is required']);
+            exit;
+        }
+        
+        $stmt = $pdo->prepare("DELETE FROM tasks WHERE id = ? AND user_id = ?");
+        $stmt->execute([$input['id'], $userId]);
+        
+        if ($stmt->rowCount() > 0) {
             echo json_encode(['success' => true, 'message' => 'Task deleted successfully']);
-            break;
-            
-        default:
-            http_response_code(405);
-            echo json_encode(['error' => 'Method not allowed']);
-            break;
+        } else {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'message' => 'Task not found']);
+        }
+        
+    } else {
+        http_response_code(405);
+        echo json_encode(['success' => false, 'message' => 'Method not allowed']);
     }
+    
+} catch (PDOException $e) {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
 } catch (Exception $e) {
     http_response_code(500);
-    echo json_encode(['error' => 'Internal server error: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'message' => 'Server error: ' . $e->getMessage()]);
 }
 ?>

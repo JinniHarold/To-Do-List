@@ -1,7 +1,15 @@
 <?php
+// Start output buffering and disable all error output
+ob_start();
+error_reporting(0);
+ini_set('display_errors', 0);
+ini_set('log_errors', 0);
+
 require_once '../config/database.php';
 require_once '../includes/auth.php';
 
+// Clear any previous output and set JSON header
+ob_clean();
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -67,6 +75,6 @@ try {
     
 } catch(PDOException $e) {
     http_response_code(500);
-    echo json_encode(['error' => 'Database error']);
+    echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
 }
 ?>

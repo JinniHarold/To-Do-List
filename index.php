@@ -28,7 +28,7 @@ require_once 'includes/auth.php';
               <ul class="navbar-menu">
                 <?php if (isLoggedIn()): ?>
                     <li><a href="dashboard.php">Dashboard</a></li>
-                    <li><a href="api/logout.php">Logout</a></li>
+                    <li><a href="#" onclick="logout(); return false;">Logout</a></li>
                 <?php else: ?>
                     <li><a href="login.php">Login</a></li>
                     <li><a href="register.php">Register</a></li>
@@ -66,5 +66,20 @@ require_once 'includes/auth.php';
         <footer class="footer">
             <p>&copy; 2025 dailydo. All rights reserved.</p>
         </footer>
+
+        <script>
+        // Logout function
+        async function logout() {
+            try {
+                await fetch('api/logout.php', { method: 'POST' });
+                localStorage.removeItem('profileData');
+                localStorage.removeItem('userSession');
+                window.location.href = 'index.php';
+            } catch (error) {
+                console.error('Logout error:', error);
+                window.location.href = 'index.php';
+            }
+        }
+        </script>
     </body>
 </html>

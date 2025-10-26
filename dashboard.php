@@ -301,7 +301,7 @@ $user = getCurrentUser();
     // Function to load tasks from database
     async function loadDashboardTasks() {
       try {
-        const response = await fetch('/api/tasks.php');
+        const response = await fetch('api/tasks.php');
         const data = await response.json();
 
         if (!data.success) {
@@ -410,7 +410,7 @@ $user = getCurrentUser();
       
       try {
         // Get current task data from API first
-        const response = await fetch('/api/tasks.php');
+        const response = await fetch('api/tasks.php');
         const data = await response.json();
         
         if (!data.success) {
@@ -423,19 +423,13 @@ $user = getCurrentUser();
         }
         
         // Update task status
-        const updateResponse = await fetch('/api/tasks.php', {
+        const updateResponse = await fetch('api/tasks.php', {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
             id: taskId,
-            title: task.title,
-            description: task.description,
-            priority: task.priority,
-            deadline: task.deadline,
-            reminder: task.reminder,
-            reminder_time: task.reminder_time,
             status: newStatus
           })
         });
@@ -480,7 +474,7 @@ $user = getCurrentUser();
     // Logout functionality
     document.getElementById('logoutBtn').addEventListener('click', function(e) {
       e.preventDefault();
-      window.location.href = '/logout';
+      window.location.href = 'api/logout.php';
     });
     
     // Function to show toast notification
@@ -516,11 +510,12 @@ $user = getCurrentUser();
             deadline: taskDue || null,
             priority: 'medium',
             reminder: setReminder,
-            reminder_time: setReminder ? 15 : 15,
-            status: 'pending'
+            reminder_time: setReminder ? 15 : 15
           };
 
-          const response = await fetch('/api/tasks.php', {
+          console.log('Sending task data:', taskData); // Debug log
+
+          const response = await fetch('api/tasks.php', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'

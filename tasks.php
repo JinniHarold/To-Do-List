@@ -316,9 +316,17 @@ $user = getCurrentUser();
     }
 
     // Logout functionality
-    document.getElementById('logoutBtn').addEventListener('click', function(e) {
+    document.getElementById('logoutBtn').addEventListener('click', async function(e) {
       e.preventDefault();
-      window.location.href = '/logout';
+      try {
+        await fetch('api/logout.php', { method: 'POST' });
+        localStorage.removeItem('profileData');
+        localStorage.removeItem('userSession');
+        window.location.href = 'index.php';
+      } catch (error) {
+        console.error('Logout error:', error);
+        window.location.href = 'index.php';
+      }
     });
 
     // Task reminder checkbox toggle
@@ -365,7 +373,7 @@ $user = getCurrentUser();
         if (taskId) {
           // Edit existing task
           taskData.id = taskId;
-          response = await fetch('/api/tasks.php', {
+          response = await fetch('api/tasks.php', {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json'
@@ -374,7 +382,7 @@ $user = getCurrentUser();
           });
         } else {
           // Add new task
-          response = await fetch('/api/tasks.php', {
+          response = await fetch('api/tasks.php', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -420,7 +428,7 @@ $user = getCurrentUser();
         if (searchTerm) params.append('search', searchTerm);
         if (priorityFilter) params.append('priority', priorityFilter);
 
-        const response = await fetch(`/api/tasks.php?${params.toString()}`);
+        const response = await fetch(`api/tasks.php?${params.toString()}`);
         const data = await response.json();
 
         if (!data.success) {
@@ -544,7 +552,7 @@ $user = getCurrentUser();
         const newStatus = task.status === 'completed' ? 'pending' : 'completed';
         
         try {
-          const response = await fetch('/api/tasks.php', {
+          const response = await fetch('api/tasks.php', {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json'
@@ -627,7 +635,7 @@ $user = getCurrentUser();
       }).then(async (result) => {
         if (result.isConfirmed) {
           try {
-            const response = await fetch('/api/tasks.php', {
+            const response = await fetch('api/tasks.php', {
               method: 'DELETE',
               headers: {
                 'Content-Type': 'application/json'

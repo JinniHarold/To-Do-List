@@ -352,20 +352,38 @@ $user = getCurrentUser();
         const response = await fetch('api/tasks.php');
         const data = await response.json();
         
+        console.log('Calendar: Loaded tasks data:', data); // Debug log
+        
         if (data.success) {
           // Group tasks by date
           tasksData = {};
           data.tasks.forEach(task => {
-            if (task.deadline) {
-              const taskDate = new Date(task.deadline);
-              const dateKey = `${taskDate.getFullYear()}-${String(taskDate.getMonth() + 1).padStart(2, '0')}-${String(taskDate.getDate()).padStart(2, '0')}`;
-              
-              if (!tasksData[dateKey]) {
-                tasksData[dateKey] = [];
+            console.log('Processing task:', task); // Debug log
+            if (task.deadline && task.deadline !== null && task.deadline !== '') {
+              try {
+                const taskDate = new Date(task.deadline);
+                
+                // Check if date is valid
+                if (!isNaN(taskDate.getTime())) {
+                  const dateKey = `${taskDate.getFullYear()}-${String(taskDate.getMonth() + 1).padStart(2, '0')}-${String(taskDate.getDate()).padStart(2, '0')}`;
+                  console.log('Date key for task:', dateKey, 'from deadline:', task.deadline); // Debug log
+                  
+                  if (!tasksData[dateKey]) {
+                    tasksData[dateKey] = [];
+                  }
+                  tasksData[dateKey].push(task);
+                } else {
+                  console.log('Invalid date for task:', task.deadline);
+                }
+              } catch (dateError) {
+                console.error('Error parsing date for task:', task.deadline, dateError);
               }
-              tasksData[dateKey].push(task);
             }
           });
+          
+          console.log('Final tasksData:', tasksData); // Debug log
+        } else {
+          console.error('Failed to load tasks:', data.message);
         }
       } catch (error) {
         console.error('Error loading tasks:', error);
