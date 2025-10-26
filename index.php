@@ -28,7 +28,7 @@ require_once 'includes/auth.php';
               <ul class="navbar-menu">
                 <?php if (isLoggedIn()): ?>
                     <li><a href="dashboard.php">Dashboard</a></li>
-                    <li><a href="#" onclick="logout(); return false;">Logout</a></li>
+                    <li><a href="#" onclick="logout(); return false;" class="logout-btn">Logout</a></li>
                 <?php else: ?>
                     <li><a href="login.php">Login</a></li>
                     <li><a href="register.php">Register</a></li>
