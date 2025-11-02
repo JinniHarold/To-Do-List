@@ -34,6 +34,9 @@ if (isLoggedIn()) {
       <ul class="navbar-menu">
         <li><a href="index.php">Home</a></li>
         <li><a href="register.php">Register</a></li>
+        <?php if (isLoggedIn()): ?>
+        <li><a href="#" onclick="logout()" style="color: #ff6b6b;">Logout</a></li>
+        <?php endif; ?>
       </ul>
     </div>
   </nav>
@@ -92,6 +95,27 @@ if (isLoggedIn()) {
         Swal.fire({ icon: 'error', title: 'Server Error', text: err.message });
       }
     });
+
+    // Logout function
+    async function logout() {
+      try {
+        const res = await fetch('api/logout.php', { method: 'POST' });
+        const data = await res.json();
+        
+        if (data.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Logged Out',
+            text: 'You have been logged out successfully'
+          }).then(() => {
+            window.location.reload();
+          });
+        }
+      } catch (error) {
+        console.error('Logout error:', error);
+        window.location.reload();
+      }
+    }
   </script>
 </body>
 </html>

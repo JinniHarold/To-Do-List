@@ -56,9 +56,9 @@ try {
         exit();
     }
     
-    // Hash password and create user
+    // Hash password and create user with default 'user' role
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-    $stmt = $pdo->prepare("INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
+    $stmt = $pdo->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, 'user')");
     $stmt->execute([$username, $email, $hashedPassword]);
     
     $userId = $pdo->lastInsertId();
@@ -67,7 +67,8 @@ try {
     $user = [
         'id' => $userId,
         'username' => $username,
-        'email' => $email
+        'email' => $email,
+        'role' => 'user'
     ];
     login($user);
     

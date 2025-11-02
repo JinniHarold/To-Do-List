@@ -28,8 +28,8 @@ if (empty($email) || empty($password)) {
 }
 
 try {
-    // Find user by email
-    $stmt = $pdo->prepare("SELECT id, username, email, password FROM users WHERE email = ?");
+    // Find user by email (include role)
+    $stmt = $pdo->prepare("SELECT id, username, email, password, role FROM users WHERE email = ?");
     $stmt->execute([$email]);
     $user = $stmt->fetch();
     
