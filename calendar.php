@@ -158,6 +158,7 @@ $user = getCurrentUser();
             Profile
           </a>
         </li>
+        <?php if (!isAdmin()): ?>
         <li class="nav-item">
           <a class="nav-link" href="dashboard.php">
             <i class="bi bi-speedometer2 me-2"></i>
@@ -176,12 +177,15 @@ $user = getCurrentUser();
             Calendar
           </a>
         </li>
+        <?php endif; ?>
+        <?php if (isAdmin()): ?>
         <li class="nav-item">
           <a class="nav-link" href="admin.php">
             <i class="bi bi-people me-2"></i>
             User Management
           </a>
         </li>
+        <?php endif; ?>
       </ul>
     </nav>
     <div class="sidebar-footer">
@@ -315,6 +319,20 @@ $user = getCurrentUser();
     document.addEventListener('DOMContentLoaded', async function() {
       await loadTasks();
       renderCalendar();
+      
+      // Logout functionality
+       document.getElementById('logoutBtn').addEventListener('click', async function(e) {
+         e.preventDefault();
+         try {
+           await fetch('api/logout.php', { method: 'POST' });
+           localStorage.removeItem('profileData');
+           localStorage.removeItem('userSession');
+           window.location.href = 'index.php';
+         } catch (error) {
+           console.error('Logout error:', error);
+           window.location.href = 'index.php';
+         }
+       });
       
       // Event listeners
       document.getElementById('prevMonth').addEventListener('click', async () => {

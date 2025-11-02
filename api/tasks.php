@@ -16,9 +16,26 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 try {
     if ($method == 'GET') {
-        // Get tasks
-        $stmt = $pdo->prepare("SELECT * FROM tasks WHERE user_id = ? ORDER BY id DESC");
-        $stmt->execute([$userId]);
+        // Get tasks with optional search and filter
+        $whereClause = "user_id = ?";
+        $params = [$userId];
+        
+        // Handle search parameter
+        if (isset($_GET['search']) && !empty(trim($_GET['search']))) {
+            $searchTerm = '%' . trim($_GET['search']) . '%';
+            $whereClause .= " AND (title LIKE ? OR description LIKE ?)";
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+        }
+        
+        // Handle priority filter
+        if (isset($_GET['priority']) && !empty($_GET['priority'])) {
+            $whereClause .= " AND priority = ?";
+            $params[] = $_GET['priority'];
+        }
+        
+        $stmt = $pdo->prepare("SELECT * FROM tasks WHERE $whereClause ORDER BY id DESC");
+        $stmt->execute($params);
         $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         echo json_encode(['success' => true, 'tasks' => $tasks]);

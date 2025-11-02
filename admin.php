@@ -1,8 +1,8 @@
 <?php
 require_once 'includes/auth.php';
 
-// Require login for admin
-requireLogin();
+// Require admin access
+requireAdmin();
 $user = getCurrentUser();
 ?>
 <!DOCTYPE html>
@@ -15,6 +15,7 @@ $user = getCurrentUser();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="assets/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .user-card {
             background: white;
@@ -85,6 +86,7 @@ $user = getCurrentUser();
                         Profile
                     </a>
                 </li>
+                <?php if (!isAdmin()): ?>
                 <li class="nav-item">
                     <a class="nav-link" href="dashboard.php">
                         <i class="bi bi-speedometer2 me-2"></i>
@@ -103,12 +105,15 @@ $user = getCurrentUser();
             Calendar
           </a>
         </li>
+                <?php endif; ?>
+                <?php if (isAdmin()): ?>
                 <li class="nav-item">
                     <a class="nav-link active" href="admin.php">
                         <i class="bi bi-people me-2"></i>
                         User Management
                     </a>
                 </li>
+                <?php endif; ?>
             </ul>
         </nav>
         <div class="sidebar-footer">
@@ -223,48 +228,101 @@ $user = getCurrentUser();
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-4 text-center mb-4">
-                            <div class="user-avatar mx-auto mb-3" id="modalUserAvatar" style="width: 100px; height: 100px; font-size: 2.5rem;">
-                                <i class="bi bi-person-fill"></i>
+                    <!-- View Mode -->
+                    <div id="viewMode">
+                        <div class="row">
+                            <div class="col-md-4 text-center mb-4">
+                                <div class="user-avatar mx-auto mb-3" id="modalUserAvatar" style="width: 100px; height: 100px; font-size: 2.5rem;">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                                <h5 id="modalUserName">-</h5>
+                                <p class="text-muted" id="modalUserEmail">-</p>
                             </div>
-                            <h5 id="modalUserName">-</h5>
-                            <p class="text-muted" id="modalUserEmail">-</p>
-                        </div>
-                        <div class="col-md-8">
-                            <div class="row">
-                                <div class="col-sm-6 mb-3">
-                                    <label class="info-label">First Name:</label>
-                                    <p id="modalFirstName">-</p>
-                                </div>
-                                <div class="col-sm-6 mb-3">
-                                    <label class="info-label">Last Name:</label>
-                                    <p id="modalLastName">-</p>
-                                </div>
-                                <div class="col-sm-6 mb-3">
-                                    <label class="info-label">Email Address:</label>
-                                    <p id="modalEmail">-</p>
-                                </div>
-
-                                <div class="col-sm-6 mb-3">
-                                    <label class="info-label">Registration Date:</label>
-                                    <p id="modalRegDate">-</p>
-                                </div>
-                                <div class="col-sm-6 mb-3">
-                                    <label class="info-label">Status:</label>
-                                    <p id="modalStatus"><span class="badge bg-success">Active</span></p>
+                            <div class="col-md-8">
+                                <div class="row">
+                                    <div class="col-sm-6 mb-3">
+                                        <label class="info-label">First Name:</label>
+                                        <p id="modalFirstName">-</p>
+                                    </div>
+                                    <div class="col-sm-6 mb-3">
+                                        <label class="info-label">Last Name:</label>
+                                        <p id="modalLastName">-</p>
+                                    </div>
+                                    <div class="col-sm-6 mb-3">
+                                        <label class="info-label">Email Address:</label>
+                                        <p id="modalEmail">-</p>
+                                    </div>
+                                    <div class="col-sm-6 mb-3">
+                                        <label class="info-label">Registration Date:</label>
+                                        <p id="modalRegDate">-</p>
+                                    </div>
+                                    <div class="col-sm-6 mb-3">
+                                        <label class="info-label">Status:</label>
+                                        <p id="modalStatus"><span class="badge bg-success">Active</span></p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Edit Mode -->
+                    <div id="editMode" style="display: none;">
+                        <form id="editUserForm">
+                            <input type="hidden" id="editUserId" name="id">
+                            <div class="row">
+                                <div class="col-md-4 text-center mb-4">
+                                    <div class="user-avatar mx-auto mb-3" id="editUserAvatar" style="width: 100px; height: 100px; font-size: 2.5rem;">
+                                        <i class="bi bi-person-fill"></i>
+                                    </div>
+                                    <h6 class="text-muted">User Avatar</h6>
+                                </div>
+                                <div class="col-md-8">
+                                    <div class="row">
+                                        <div class="col-12 mb-3">
+                                            <label for="editUsername" class="form-label info-label">Username:</label>
+                                            <input type="text" class="form-control" id="editUsername" name="username" required>
+                                        </div>
+                                        <div class="col-12 mb-3">
+                                            <label for="editEmail" class="form-label info-label">Email Address:</label>
+                                            <input type="email" class="form-control" id="editEmail" name="email" required>
+                                        </div>
+                                        <div class="col-sm-6 mb-3">
+                                            <label class="info-label">Registration Date:</label>
+                                            <p id="editRegDate" class="form-control-plaintext">-</p>
+                                        </div>
+                                        <div class="col-sm-6 mb-3">
+                                            <label class="info-label">Status:</label>
+                                            <p class="form-control-plaintext"><span class="badge bg-success">Active</span></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x-lg me-1"></i>Close
-                    </button>
-                    <button type="button" class="btn btn-primary" onclick="editUser()">
-                        <i class="bi bi-pencil me-1"></i>Edit User
-                    </button>
+                    <!-- View Mode Buttons -->
+                    <div id="viewModeButtons">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-lg me-1"></i>Close
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="enterEditMode()">
+                            <i class="bi bi-pencil me-1"></i>Edit User
+                        </button>
+                    </div>
+                    
+                    <!-- Edit Mode Buttons -->
+                    <div id="editModeButtons" style="display: none;">
+                        <button type="button" class="btn btn-secondary" onclick="cancelEdit()">
+                            <i class="bi bi-x-lg me-1"></i>Cancel
+                        </button>
+                        <button type="button" class="btn btn-danger" onclick="deleteUser()">
+                            <i class="bi bi-trash me-1"></i>Delete User
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="saveUser()">
+                            <i class="bi bi-check-lg me-1"></i>Save Changes
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -413,6 +471,12 @@ $user = getCurrentUser();
             currentUser = users.find(u => u.id === userId);
             if (!currentUser) return;
             
+            // Reset modal to view mode
+            document.getElementById('viewMode').style.display = 'block';
+            document.getElementById('editMode').style.display = 'none';
+            document.getElementById('viewModeButtons').style.display = 'block';
+            document.getElementById('editModeButtons').style.display = 'none';
+            
             // Get initials for avatar
             const firstInitial = currentUser.firstName ? currentUser.firstName.charAt(0).toUpperCase() : '';
             const lastInitial = currentUser.lastName ? currentUser.lastName.charAt(0).toUpperCase() : '';
@@ -464,9 +528,169 @@ $user = getCurrentUser();
             document.getElementById('searchUsers').value = '';
         }
 
-        // Edit user function (placeholder)
-        function editUser() {
-            alert('Edit user functionality would be implemented here.');
+        // Enter edit mode
+        function enterEditMode() {
+            // Hide view mode elements and show edit mode elements
+            document.getElementById('viewMode').style.display = 'none';
+            document.getElementById('editMode').style.display = 'block';
+            document.getElementById('viewModeButtons').style.display = 'none';
+            document.getElementById('editModeButtons').style.display = 'block';
+            
+            // Populate edit form with current user data
+            document.getElementById('editUsername').value = currentUser.username;
+            document.getElementById('editEmail').value = currentUser.email;
+        }
+
+        // Cancel edit mode
+        function cancelEdit() {
+            // Show view mode elements and hide edit mode elements
+            document.getElementById('viewMode').style.display = 'block';
+            document.getElementById('editMode').style.display = 'none';
+            document.getElementById('viewModeButtons').style.display = 'block';
+            document.getElementById('editModeButtons').style.display = 'none';
+        }
+
+        // Save user changes
+        async function saveUser() {
+            const username = document.getElementById('editUsername').value.trim();
+            const email = document.getElementById('editEmail').value.trim();
+            
+            // Validate input
+            if (!username || !email) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validation Error',
+                    text: 'Please fill in all required fields.'
+                });
+                return;
+            }
+            
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid Email',
+                    text: 'Please enter a valid email address.'
+                });
+                return;
+            }
+            
+            try {
+                const response = await fetch('api/admin.php', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id: currentUser.id,
+                        username: username,
+                        email: email
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: 'User updated successfully.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    
+                    // Update current user data
+                    currentUser.username = username;
+                    currentUser.email = email;
+                    
+                    // Update the view mode display
+                    document.getElementById('modalUserEmail').textContent = email;
+                    document.getElementById('modalEmail').textContent = email;
+                    
+                    // Exit edit mode
+                    cancelEdit();
+                    
+                    // Refresh the user list
+                    loadUsers();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'Failed to update user.'
+                    });
+                }
+            } catch (error) {
+                console.error('Error updating user:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred while updating the user.'
+                });
+            }
+        }
+
+        // Delete user
+        async function deleteUser() {
+            // Confirm deletion
+            const result = await Swal.fire({
+                title: 'Are you sure?',
+                text: `This will permanently delete the user "${currentUser.username}" and all their tasks. This action cannot be undone!`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete user!',
+                cancelButtonText: 'Cancel'
+            });
+            
+            if (!result.isConfirmed) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('api/admin.php', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id: currentUser.id
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Deleted!',
+                        text: 'User has been deleted successfully.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('userModal'));
+                    modal.hide();
+                    
+                    // Refresh the user list
+                    loadUsers();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'Failed to delete user.'
+                    });
+                }
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred while deleting the user.'
+                });
+            }
         }
 
         // Logout function

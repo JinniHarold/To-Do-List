@@ -115,6 +115,7 @@ $user = getCurrentUser();
                         Profile
                     </a>
                 </li>
+                <?php if (!isAdmin()): ?>
                 <li class="nav-item">
                     <a class="nav-link" href="dashboard.php">
                         <i class="bi bi-speedometer2 me-2"></i>
@@ -133,12 +134,15 @@ $user = getCurrentUser();
             Calendar
           </a>
         </li>
+                <?php endif; ?>
+                <?php if (isAdmin()): ?>
                 <li class="nav-item">
                     <a class="nav-link" href="admin.php">
                         <i class="bi bi-people me-2"></i>
                         User Management
                     </a>
                 </li>
+                <?php endif; ?>
             </ul>
         </nav>
         <div class="sidebar-footer">

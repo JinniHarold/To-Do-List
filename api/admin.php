@@ -5,8 +5,8 @@ require_once '../config/database.php';
 // Set content type to JSON
 header('Content-Type: application/json');
 
-// Require login and check if user is admin (for now, any logged-in user can access)
-requireLogin();
+// Require admin access
+requireAdmin();
 
 // Handle different HTTP methods
 $method = $_SERVER['REQUEST_METHOD'];
@@ -14,6 +14,12 @@ $method = $_SERVER['REQUEST_METHOD'];
 switch ($method) {
     case 'GET':
         handleGetRequest();
+        break;
+    case 'PUT':
+        handlePutRequest();
+        break;
+    case 'DELETE':
+        handleDeleteRequest();
         break;
     default:
         http_response_code(405);
@@ -133,6 +139,110 @@ function getUserStats() {
             'success' => false,
             'message' => 'Database error occurred'
         ]);
+    }
+}
+
+function handlePutRequest() {
+    global $pdo;
+    
+    $input = json_decode(file_get_contents('php://input'), true);
+    
+    if (!$input || !isset($input['id'])) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'User ID is required']);
+        return;
+    }
+    
+    $userId = (int)$input['id'];
+    $username = trim($input['username'] ?? '');
+    $email = trim($input['email'] ?? '');
+    
+    // Validate input
+    if (empty($username) || empty($email)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Username and email are required']);
+        return;
+    }
+    
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Invalid email format']);
+        return;
+    }
+    
+    try {
+        // Check if email is already taken by another user
+        $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ? AND id != ?");
+        $stmt->execute([$email, $userId]);
+        if ($stmt->fetch()) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Email is already taken by another user']);
+            return;
+        }
+        
+        // Update user
+        $stmt = $pdo->prepare("UPDATE users SET username = ?, email = ? WHERE id = ?");
+        $stmt->execute([$username, $email, $userId]);
+        
+        if ($stmt->rowCount() > 0) {
+            echo json_encode(['success' => true, 'message' => 'User updated successfully']);
+        } else {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'message' => 'User not found']);
+        }
+        
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Database error occurred']);
+    }
+}
+
+function handleDeleteRequest() {
+    global $pdo;
+    
+    $input = json_decode(file_get_contents('php://input'), true);
+    
+    if (!$input || !isset($input['id'])) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'User ID is required']);
+        return;
+    }
+    
+    $userId = (int)$input['id'];
+    $currentUserId = $_SESSION['user_id'];
+    
+    // Prevent admin from deleting themselves
+    if ($userId === $currentUserId) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'You cannot delete your own account']);
+        return;
+    }
+    
+    try {
+        // Start transaction
+        $pdo->beginTransaction();
+        
+        // Delete user's tasks first (if tasks table exists)
+        $stmt = $pdo->prepare("DELETE FROM tasks WHERE user_id = ?");
+        $stmt->execute([$userId]);
+        
+        // Delete user
+        $stmt = $pdo->prepare("DELETE FROM users WHERE id = ?");
+        $stmt->execute([$userId]);
+        
+        if ($stmt->rowCount() > 0) {
+            $pdo->commit();
+            echo json_encode(['success' => true, 'message' => 'User deleted successfully']);
+        } else {
+            $pdo->rollback();
+            http_response_code(404);
+            echo json_encode(['success' => false, 'message' => 'User not found']);
+        }
+        
+    } catch (PDOException $e) {
+        $pdo->rollback();
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Database error occurred']);
     }
 }
 ?>
